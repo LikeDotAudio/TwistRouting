@@ -28,34 +28,58 @@
       "monitor": true
     },
     {
-      "name": "IEM 1",
+      "name": "Studio Speaker",
       "accepts": "audio",
-      "row": "iem"
+      "maxAudio": 1,
+      "row": "speaker"
     },
     {
-      "name": "IEM 2",
+      "name": "Audio Monitor 1",
       "accepts": "audio",
-      "row": "iem"
+      "maxAudio": 1,
+      "row": "audiomon"
     },
     {
-      "name": "IEM 3",
+      "name": "Audio Monitor 2",
       "accepts": "audio",
-      "row": "iem"
+      "maxAudio": 1,
+      "row": "audiomon"
     },
     {
-      "name": "IEM 4",
+      "name": "Audio Monitor 3",
       "accepts": "audio",
-      "row": "iem"
+      "maxAudio": 1,
+      "row": "audiomon"
     },
     {
-      "name": "Foldback 1",
+      "name": "Audio Monitor 4",
       "accepts": "audio",
-      "row": "foldback"
+      "maxAudio": 1,
+      "row": "audiomon"
     },
     {
-      "name": "Foldback 2",
+      "name": "IFB 1",
       "accepts": "audio",
-      "row": "foldback"
+      "maxAudio": 1,
+      "row": "ifb"
+    },
+    {
+      "name": "IFB 2",
+      "accepts": "audio",
+      "maxAudio": 1,
+      "row": "ifb"
+    },
+    {
+      "name": "IFB 3",
+      "accepts": "audio",
+      "maxAudio": 1,
+      "row": "ifb"
+    },
+    {
+      "name": "IFB 4",
+      "accepts": "audio",
+      "maxAudio": 1,
+      "row": "ifb"
     }
   ],
   "status": "OK"

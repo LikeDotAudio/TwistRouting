@@ -214,6 +214,20 @@
             cursor: grabbing;
         }
 
+        /* Shape tells category at a glance: video reads as a trapezoid (\ /),
+           audio as a rounded pill ( ). Multiplex/group containers stay square. */
+        .signal-node.video:not(.multiplex):not(.dropped-group) {
+            clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+            border-radius: 0;
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+        .signal-node.audio:not(.multiplex):not(.dropped-group) {
+            border-radius: 999px;
+            padding-left: 14px;
+            padding-right: 14px;
+        }
+
         .signal-node::after {
             content: '';
             position: absolute;
@@ -728,9 +742,20 @@
             letter-spacing: 1px;
             font-weight: bold;
         }
-        /* A faulted (offline) destination room pulses its whole frame red. */
-        .program-row.fault .program-title { background: #ff3b3b !important; color: #2a0000; }
-        .program-row.fault::after { background: #ff3b3b !important; }
+        /* A faulted (offline) destination room pulses its whole L-bar red.
+           Uses an animation (no !important) so it overrides the inline/normal
+           background — an !important static colour would beat the animation. */
+        @keyframes lbarPulse {
+            0%, 100% { background-color: #ff3b3b; box-shadow: 0 0 8px rgba(255, 45, 45, 0.55); }
+            50%      { background-color: #8f1414; box-shadow: 0 0 26px rgba(255, 45, 45, 0.95); }
+        }
+        .program-row.fault .program-title {
+            color: #2a0000;
+            animation: lbarPulse 1.1s ease-in-out infinite;
+        }
+        .program-row.fault::after {
+            animation: lbarPulse 1.1s ease-in-out infinite;
+        }
         .program-row.fault .twist-container { animation: faultPulse 1.2s ease-in-out infinite; }
         /* Corrupted DNA strand: a faulted source has been routed into this twist. */
         .twist-container.corrupted .twist-title { color: #ff3b3b; }
@@ -960,14 +985,14 @@
 
     <a class="credit-button" href="https://www.like.audio" target="_blank" rel="noopener">CREATED BY ANTHONY PETER KUZUB&nbsp;&nbsp;-&nbsp;&nbsp;WWW.LIKE.AUDIO</a>
 
-    <script src="js/globals.js?v=34"></script>
-    <script src="js/poolVideo.js?v=34"></script>
-    <script src="js/poolAudio.js?v=34"></script>
-    <script src="js/visuals.js?v=34"></script>
-    <script src="js/matrix.js?v=34"></script>
-    <script src="js/dragDrop.js?v=34"></script>
-    <script src="js/productions.js?v=34"></script>
-    <script src="js/topbar.js?v=34"></script>
-    <script src="js/app.js?v=34"></script>
+    <script src="js/globals.js?v=35"></script>
+    <script src="js/poolVideo.js?v=35"></script>
+    <script src="js/poolAudio.js?v=35"></script>
+    <script src="js/visuals.js?v=35"></script>
+    <script src="js/matrix.js?v=35"></script>
+    <script src="js/dragDrop.js?v=35"></script>
+    <script src="js/productions.js?v=35"></script>
+    <script src="js/topbar.js?v=35"></script>
+    <script src="js/app.js?v=35"></script>
 </body>
 </html>

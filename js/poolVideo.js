@@ -73,4 +73,7 @@ function renderVideoPool(data, container) {
     `;
     container.appendChild(group);
     populateVideoPool(data.id, data.prefix, data.count, data.extraClass, data.color, data.status);
+    // Tag every feed (and its sub-streams) with where it came from.
+    const grid = document.getElementById(data.id);
+    if (grid) grid.querySelectorAll('.signal-node').forEach(n => { n.dataset.origin = data.origin || data.name; });
 }

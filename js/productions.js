@@ -6,27 +6,33 @@
 function renderProductionInputs(programs, container) {
     if (!container) return;
 
-    // Each production explodes into its real outputs: video (multiviewer/program/
-    // preview), audio (main mix + mix-minus), and intercom (IFB) feeds.
-    const videoOuts = ['MV OUT 1', 'MV OUT 2', 'PROGRAM OUT', 'PREVIEW OUT'];
-    const audioOuts = ['MAIN MIX', 'MIX MINUS 1', 'MIX MINUS 2', 'MIX MINUS 3', 'MIX MINUS 4'];
-    const intercomOuts = ['IFB OUT 1', 'IFB OUT 2', 'IFB OUT 3', 'IFB OUT 4'];
+    // A production's outputs are defined in its OWN JSON (outputs.video / .audio /
+    // .intercom). These defaults apply only if a file omits them.
+    const DEFAULT_OUTPUTS = {
+        video: ['AUX 1', 'AUX 2', 'MV 1', 'PROGRAM'],
+        audio: ['MAIN MIX', 'MIX MINUS 1', 'MIX MINUS 2', 'MIX MINUS 3', 'MIX MINUS 4'],
+        intercom: ['IFB OUT 1', 'IFB OUT 2', 'IFB OUT 3', 'IFB OUT 4'],
+    };
     const slug = (s) => s.replace(/[^a-zA-Z0-9]/g, '-');
 
     programs.forEach(pgm => {
         const color = pgm.color || '#7CFC00';
+        const outs = pgm.outputs || {};
+        const videoOuts = outs.video || DEFAULT_OUTPUTS.video;
+        const audioOuts = outs.audio || DEFAULT_OUTPUTS.audio;
+        const intercomOuts = outs.intercom || DEFAULT_OUTPUTS.intercom;
         const group = document.createElement('div');
         group.className = 'input-group';
 
         let items = '';
         videoOuts.forEach(o => {
-            items += `<div class="signal-node video video-main" draggable="true" id="prodsrc-${pgm.id}-${slug(o)}" style="border-color:${color}; color:${color};">${pgm.name} ${o}</div>`;
+            items += `<div class="signal-node video video-main" draggable="true" data-origin="${pgm.name}" id="prodsrc-${pgm.id}-${slug(o)}" style="border-color:${color}; color:${color};">${pgm.name} ${o}</div>`;
         });
         audioOuts.forEach(o => {
-            items += `<div class="signal-node audio audio-studio" draggable="true" id="prodsrc-${pgm.id}-${slug(o)}">${pgm.name} ${o}</div>`;
+            items += `<div class="signal-node audio audio-studio" draggable="true" data-origin="${pgm.name}" id="prodsrc-${pgm.id}-${slug(o)}">${pgm.name} ${o}</div>`;
         });
         intercomOuts.forEach(o => {
-            items += `<div class="signal-node audio audio-comms" draggable="true" id="prodsrc-${pgm.id}-${slug(o)}">${pgm.name} ${o}</div>`;
+            items += `<div class="signal-node audio audio-comms" draggable="true" data-origin="${pgm.name}" id="prodsrc-${pgm.id}-${slug(o)}">${pgm.name} ${o}</div>`;
         });
 
         group.innerHTML = `

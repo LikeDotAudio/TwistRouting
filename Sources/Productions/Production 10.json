@@ -1,5 +1,26 @@
 {
   "id": "prod10",
   "name": "PROD 10",
-  "color": "#6699FF"
+  "color": "#6699FF",
+  "outputs": {
+    "video": [
+      "AUX 1",
+      "AUX 2",
+      "MV 1",
+      "PROGRAM"
+    ],
+    "audio": [
+      "MAIN MIX",
+      "MIX MINUS 1",
+      "MIX MINUS 2",
+      "MIX MINUS 3",
+      "MIX MINUS 4"
+    ],
+    "intercom": [
+      "IFB OUT 1",
+      "IFB OUT 2",
+      "IFB OUT 3",
+      "IFB OUT 4"
+    ]
+  }
 }

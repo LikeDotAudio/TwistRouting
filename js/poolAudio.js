@@ -74,4 +74,8 @@ function renderAudioPool(data, container, color) {
     `;
     container.appendChild(group);
     populateAudioPool(data.id, data.prefix, data.count, data.extraClass, data.items, poolColor, data.status);
+    // Tag every feed with where it came from, so a dropped batch can be grouped
+    // under its origin (e.g. "1st Floor — STAGEBOX 202") instead of bare CH 1-12.
+    const grid = document.getElementById(data.id);
+    if (grid) grid.querySelectorAll('.signal-node').forEach(n => { n.dataset.origin = data.origin || data.name; });
 }

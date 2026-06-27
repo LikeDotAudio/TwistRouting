@@ -1,3 +1,61 @@
+// Enforce a twist's hard input limits so a newly added source REPLACES the
+// oldest rather than stacking past the limit. Caps applied: maxVideo (video
+// sources), maxAudio (audio sources), and a total cap equal to the number of
+// defined inputs (config.inputs.length).
+function enforceTwistLimits(dropZone, config, child) {
+    if (!config) return;
+    const isVideo = child.classList.contains('video');
+    const isAudio = child.classList.contains('audio');
+    if (config.maxVideo && isVideo) {
+        const ex = dropZone.querySelectorAll('.signal-node.video');
+        for (let k = 0; k < ex.length - (config.maxVideo - 1); k++) ex[k].remove();
+    }
+    if (config.maxAudio && isAudio) {
+        const ex = dropZone.querySelectorAll('.signal-node.audio');
+        for (let k = 0; k < ex.length - (config.maxAudio - 1); k++) ex[k].remove();
+    }
+    if (Array.isArray(config.inputs) && config.inputs.length) {
+        const cap = config.inputs.length;
+        const ex = dropZone.querySelectorAll(':scope > .signal-node');
+        for (let k = 0; k < ex.length - (cap - 1); k++) ex[k].remove();
+    }
+}
+
+// Build one collapsible "where it came from" chip from a set of source nodes:
+// shows "<origin> ×N" and expands to the individual feeds. Used for multiplex
+// boxes and for same-origin plain sources (e.g. STAGEBOX 202's CH 1-12).
+function buildDroppedGroup(groupName, groupColor, sourceNodes) {
+    const group = document.createElement('div');
+    group.className = 'signal-node dropped-group';
+    group.style.borderColor = groupColor;
+    group.style.color = groupColor;
+    group.id = 'grp-' + Math.random().toString(36).substr(2, 6);
+
+    const head = document.createElement('div');
+    head.className = 'dropped-group-header';
+    head.innerText = `${groupName} ×${sourceNodes.length}`;
+
+    const kids = document.createElement('div');
+    kids.className = 'dropped-group-children';
+    kids.style.display = 'none';
+    sourceNodes.forEach(src => {
+        const c = src.cloneNode(true);
+        c.id = src.id + '-' + Math.random().toString(36).substr(2, 6);
+        c.classList.remove('sub-stream', 'selected');
+        c.style.opacity = '1';
+        c.draggable = false;
+        kids.appendChild(c);
+    });
+
+    group.appendChild(head);
+    group.appendChild(kids);
+    group.addEventListener('click', (e) => {
+        e.stopPropagation();
+        kids.style.display = kids.style.display === 'none' ? 'flex' : 'none';
+    });
+    return group;
+}
+
 function initializeTwists() {
     document.querySelectorAll('.twist-container').forEach(twist => {
         if (twist.dataset.initialized) return;
@@ -50,89 +108,64 @@ function initializeTwists() {
                 twist.appendChild(dropZone);
             }
             
-            // Append while enforcing an optional per-twist video cap
-            // (e.g. encoders accept only 1 video source — a new one replaces it).
+            // Append while enforcing this twist's hard limits (e.g. a monitor
+            // takes 1 video, a defined-input twist takes inputs.length total) —
+            // when full, the oldest is dropped so the new source REPLACES rather
+            // than stacks beyond the limit.
             function appendWithLimit(child) {
-                if (config && config.maxVideo && child.classList.contains('video')) {
-                    const existingVideo = dropZone.querySelectorAll('.signal-node.video');
-                    const removeCount = existingVideo.length - (config.maxVideo - 1);
-                    for (let k = 0; k < removeCount; k++) existingVideo[k].remove();
-                }
-                if (config && config.maxAudio && child.classList.contains('audio')) {
-                    const existingAudio = dropZone.querySelectorAll('.signal-node.audio');
-                    const removeCount = existingAudio.length - (config.maxAudio - 1);
-                    for (let k = 0; k < removeCount; k++) existingAudio[k].remove();
-                }
+                enforceTwistLimits(dropZone, config, child);
                 dropZone.appendChild(child);
             }
 
+            const acceptsType = (el) => {
+                if (!config || !config.accepts) return true;
+                if (config.accepts === 'video') return el.classList.contains('video');
+                if (config.accepts === 'audio') return el.classList.contains('audio');
+                return true;
+            };
+
+            const plain = [];  // non-multiplex pool nodes, grouped by origin below
             ids.forEach(id => {
                 const node = document.getElementById(id);
-                if (node) {
-                    if (sourceType === 'pool') {
-                        if (node.classList.contains('multiplex')) {
-                            // A dropped group shows as ONE compact chip in the group's
-                            // colour; the individual feeds live inside it (click to expand).
-                            const accepts = config && config.accepts;
-                            const accepted = Array.from(node.querySelectorAll('.sub-stream')).filter(sub => {
-                                if (accepts === 'video' && !sub.classList.contains('video')) return false;
-                                if (accepts === 'audio' && !sub.classList.contains('audio')) return false;
-                                return true;
-                            });
-                            if (accepted.length) {
-                                const headerEl = node.querySelector('.multiplex-header');
-                                const groupName = headerEl ? headerEl.innerText : node.id;
-                                const groupColor = window.getComputedStyle(node).color;
-                                const group = document.createElement('div');
-                                group.className = 'signal-node dropped-group';
-                                group.style.borderColor = groupColor;
-                                group.style.color = groupColor;
-                                group.id = node.id + '-grp-' + Math.random().toString(36).substr(2, 6);
-
-                                const head = document.createElement('div');
-                                head.className = 'dropped-group-header';
-                                head.innerText = `${groupName} ×${accepted.length}`;
-
-                                const kids = document.createElement('div');
-                                kids.className = 'dropped-group-children';
-                                kids.style.display = 'none';
-                                accepted.forEach(sub => {
-                                    const c = sub.cloneNode(true);
-                                    c.id = sub.id + '-' + Math.random().toString(36).substr(2, 6);
-                                    c.classList.remove('sub-stream');
-                                    c.classList.remove('selected');
-                                    c.style.opacity = '1';
-                                    c.draggable = false;
-                                    kids.appendChild(c);
-                                });
-
-                                group.appendChild(head);
-                                group.appendChild(kids);
-                                group.addEventListener('click', (e) => {
-                                    e.stopPropagation();
-                                    kids.style.display = kids.style.display === 'none' ? 'flex' : 'none';
-                                });
-                                dropZone.appendChild(group);
-                            }
-                        } else {
-                            if (config && config.accepts) {
-                                if (config.accepts === 'video' && !node.classList.contains('video')) return;
-                                if (config.accepts === 'audio' && !node.classList.contains('audio')) return;
-                            }
-                            const clone = node.cloneNode(true);
-                            clone.id = id + '-' + Math.random().toString(36).substr(2, 6);
-                            clone.classList.remove('selected');
-                            clone.style.opacity = '1';
-                            clone.draggable = false;
-                            appendWithLimit(clone);
-                        }
-                    } else {
-                        if (config && config.accepts) {
-                            if (config.accepts === 'video' && !node.classList.contains('video')) return;
-                            if (config.accepts === 'audio' && !node.classList.contains('audio')) return;
-                        }
-                        appendWithLimit(node);
+                if (!node) return;
+                if (sourceType !== 'pool') {
+                    if (acceptsType(node)) appendWithLimit(node);
+                    return;
+                }
+                if (node.classList.contains('multiplex')) {
+                    // A multiplex box drops as one collapsible chip of its feeds.
+                    const accepted = Array.from(node.querySelectorAll('.sub-stream')).filter(acceptsType);
+                    if (accepted.length) {
+                        const headerEl = node.querySelector('.multiplex-header');
+                        const groupName = headerEl ? headerEl.innerText : (node.dataset.origin || node.id);
+                        dropZone.appendChild(buildDroppedGroup(groupName, window.getComputedStyle(node).color, accepted));
                     }
+                } else if (acceptsType(node)) {
+                    plain.push(node);
+                }
+            });
+
+            // Group same-origin plain sources under one labeled container so you
+            // can see where they came from (e.g. "1st Floor — STAGEBOX 202")
+            // instead of a wall of bare CH 1-12 chips.
+            const byOrigin = new Map();
+            plain.forEach(n => {
+                const key = n.dataset.origin || '';
+                if (!byOrigin.has(key)) byOrigin.set(key, []);
+                byOrigin.get(key).push(n);
+            });
+            byOrigin.forEach((nodes, origin) => {
+                if (origin && nodes.length >= 2) {
+                    dropZone.appendChild(buildDroppedGroup(origin, window.getComputedStyle(nodes[0]).color, nodes));
+                } else {
+                    nodes.forEach(n => {
+                        const clone = n.cloneNode(true);
+                        clone.id = n.id + '-' + Math.random().toString(36).substr(2, 6);
+                        clone.classList.remove('selected');
+                        clone.style.opacity = '1';
+                        clone.draggable = false;
+                        appendWithLimit(clone);
+                    });
                 }
             });
             
@@ -400,20 +433,12 @@ function placeSourceInTwist(twist, node) {
         twist.appendChild(dropZone);
     }
 
-    if (config && config.maxVideo && isVideo) {
-        const ex = dropZone.querySelectorAll('.signal-node.video');
-        for (let k = 0; k < ex.length - (config.maxVideo - 1); k++) ex[k].remove();
-    }
-    if (config && config.maxAudio && isAudio) {
-        const ex = dropZone.querySelectorAll('.signal-node.audio');
-        for (let k = 0; k < ex.length - (config.maxAudio - 1); k++) ex[k].remove();
-    }
-
     const clone = node.cloneNode(true);
     clone.id = node.id + '-' + Math.random().toString(36).substr(2, 6);
     clone.classList.remove('selected');
     clone.style.opacity = '1';
     clone.draggable = false;
+    enforceTwistLimits(dropZone, config, clone);   // replace, don't stack, when full
     dropZone.appendChild(clone);
     return true;
 }

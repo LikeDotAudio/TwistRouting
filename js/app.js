@@ -35,13 +35,15 @@ function makeMediaGroup(container, title, color, depth) {
 // every *.json becomes a pool, every subfolder becomes a nested collapsible
 // group. Discovery is dynamic — drop in a new folder or file and it appears,
 // provided the static server exposes directory listings.
-async function renderMediaTree(baseUrl, container, kind, depth, inheritColor) {
+async function renderMediaTree(baseUrl, container, kind, depth, inheritColor, parentLabel) {
     const { dirs, files } = await listDirectory(baseUrl);
 
     // Loose files at this level render as standalone pools.
     for (let fi = 0; fi < files.length; fi++) {
         const data = await fetchJSON(baseUrl + files[fi].href);
         if (!data) continue;
+        // Origin shown when this box's feeds are dropped: "1st Floor — STAGEBOX 202".
+        data.origin = parentLabel ? `${parentLabel} — ${data.name}` : data.name;
         if (kind === 'audio') {
             const color = inheritColor || AUDIO_POOL_COLORS[fi % AUDIO_POOL_COLORS.length];
             if (typeof renderAudioPool === 'function') renderAudioPool(data, container, color);
@@ -57,7 +59,7 @@ async function renderMediaTree(baseUrl, container, kind, depth, inheritColor) {
             ? AUDIO_POOL_COLORS[d % AUDIO_POOL_COLORS.length]
             : (inheritColor || AUDIO_POOL_COLORS[d % AUDIO_POOL_COLORS.length]);
         const content = makeMediaGroup(container, dirs[d].name, groupColor, depth);
-        await renderMediaTree(baseUrl + dirs[d].href, content, kind, depth + 1, groupColor);
+        await renderMediaTree(baseUrl + dirs[d].href, content, kind, depth + 1, groupColor, dirs[d].name);
     }
 }
 
