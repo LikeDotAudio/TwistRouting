@@ -1,6 +1,6 @@
 {
-  "id": "floor3",
-  "name": "3RD FLOOR",
+  "id": "fl1-rm3",
+  "name": "ROOM 3",
   "color": "#3FC1C9",
   "twists": [
     {
@@ -29,33 +29,27 @@
     },
     {
       "name": "IEM 1",
-      "accepts": "audio",
-      "row": "iem"
+      "accepts": "audio"
     },
     {
       "name": "IEM 2",
-      "accepts": "audio",
-      "row": "iem"
+      "accepts": "audio"
     },
     {
       "name": "IEM 3",
-      "accepts": "audio",
-      "row": "iem"
+      "accepts": "audio"
     },
     {
       "name": "IEM 4",
-      "accepts": "audio",
-      "row": "iem"
+      "accepts": "audio"
     },
     {
       "name": "Foldback 1",
-      "accepts": "audio",
-      "row": "foldback"
+      "accepts": "audio"
     },
     {
       "name": "Foldback 2",
-      "accepts": "audio",
-      "row": "foldback"
+      "accepts": "audio"
     }
   ]
 }
