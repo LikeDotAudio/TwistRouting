@@ -14,6 +14,22 @@ async function fetchJSON(url) {
     }
 }
 
+function toggleSuperPool(event, container) {
+    if (event.target === container || event.target.closest('.super-pool-title')) {
+        const content = container.querySelector('.super-pool-content');
+        const icon = container.querySelector('.super-pool-title .fold-icon');
+        const isOpening = content.style.display === 'none';
+        
+        if (isOpening) {
+            content.style.display = '';
+            if (icon) icon.style.transform = 'rotate(0deg)';
+        } else {
+            content.style.display = 'none';
+            if (icon) icon.style.transform = 'rotate(-90deg)';
+        }
+    }
+}
+
 function togglePool(headerEl) {
     const content = headerEl.nextElementSibling;
     const icon = headerEl.querySelector('.fold-icon');

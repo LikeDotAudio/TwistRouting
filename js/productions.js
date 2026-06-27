@@ -15,15 +15,21 @@ function renderPrograms(programs) {
         pgmTwists.forEach(twistObj => {
             let twistName = twistObj;
             let twistConfig = '';
+            let lcarsColor = pgm.color || '#ffaa00';
+            
             if (typeof twistObj === 'object') {
                 twistName = twistObj.name;
                 twistConfig = `data-config='${JSON.stringify(twistObj).replace(/'/g, "&#39;")}'`;
+                if (twistObj.accepts === 'video') lcarsColor = '#FF9C00';
+                if (twistObj.accepts === 'audio') lcarsColor = '#99CCFF';
             }
 
             html += `
-                    <div class="twist-container" ${twistConfig} style="flex: 0 0 auto; min-width: 200px;">
-                        <svg viewBox="0 0 80 100"></svg>
-                        <div class="twist-title" style="color: ${pgm.color};">${twistName}</div>
+                    <div class="twist-container" ${twistConfig} style="--lcars-color: ${lcarsColor}; flex: 0 0 auto; min-width: 200px;" ondrop="drop(event)" ondragover="allowDrop(event)">
+                        <div class="twist-title">${twistName}</div>
+                        <div class="matrix-container" id="${pgm.id}-${twistName.replace(/\s+/g, '-').toLowerCase()}">
+                            <div style="color: rgba(255,255,255,0.5); text-align: center; margin-top: 50px;">NO SWIMMERS ASSIGNED TO THIS GENE.</div>
+                        </div>
                     </div>
             `;
         });

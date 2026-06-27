@@ -108,6 +108,9 @@ function openTwistModal(twistElement) {
     const title = twistElement.querySelector('.twist-title').innerText;
     document.getElementById('modal-title').innerText = title + " // SWITCHER MATRIX";
     
+    const twistColor = twistElement.style.getPropertyValue('--lcars-color') || '#ffaa00';
+    document.querySelector('.modal-content').style.setProperty('--lcars-color', twistColor);
+    
     const matrixContainer = document.getElementById('matrix-container');
     matrixContainer.innerHTML = '';
     
@@ -309,7 +312,7 @@ function removeSwimmer(btnEl, swimmerId) {
     
     const matrixContainer = document.getElementById('matrix-container');
     if (matrixContainer.children.length === 0) {
-        matrixContainer.innerHTML = '<div style="color: rgba(255,255,255,0.5); text-align: center; margin-top: 50px;">NO SWIMMERS ASSIGNED TO THIS TWIST.</div>';
+        matrixContainer.innerHTML = '<div style="color: rgba(255,255,255,0.5); text-align: center; margin-top: 50px;">NO SWIMMERS ASSIGNED TO THIS GENE.</div>';
     }
 }
 

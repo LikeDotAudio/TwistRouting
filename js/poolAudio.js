@@ -31,9 +31,9 @@ function renderAudioPool(data, container) {
     group.innerHTML = `
         <div class="foldable-header" style="font-size: 11px; margin-bottom: 8px; color: #00ffff; text-shadow: 0 0 5px rgba(0,255,255,0.3);" onclick="togglePool(this)">
             <span>${data.name}</span>
-            <span class="fold-icon">▼</span>
+            <span class="fold-icon" style="transform: rotate(-90deg); display: inline-block; transition: transform 0.2s;">▼</span>
         </div>
-        <div class="input-grid-audio pool-content" id="${data.id}">
+        <div class="input-grid-audio pool-content" id="${data.id}" style="display: none;">
         </div>
     `;
     container.appendChild(group);

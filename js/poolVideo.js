@@ -28,9 +28,9 @@ function renderVideoPool(data, container) {
     group.innerHTML = `
         <div class="foldable-header" style="--lcars-color: ${data.color || 'var(--lcars-color)'}; font-size: 11px; margin-bottom: 8px;" onclick="togglePool(this)">
             <span>${data.name}</span>
-            <span class="fold-icon">▼</span>
+            <span class="fold-icon" style="transform: rotate(-90deg); display: inline-block; transition: transform 0.2s;">▼</span>
         </div>
-        <div class="input-grid-video pool-content" id="${data.id}">
+        <div class="input-grid-video pool-content" id="${data.id}" style="display: none;">
         </div>
     `;
     container.appendChild(group);

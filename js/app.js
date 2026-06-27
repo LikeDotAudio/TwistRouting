@@ -31,15 +31,27 @@ async function initApp() {
     const videoFiles = ['Studio 1.json', 'Studio 2.json', 'Studio 3.json', 'Studio 4.json', 'Remotes.json', 'Sats.json'];
     const videoSuper = document.getElementById('video-super-pool-content');
     for (let file of videoFiles) {
-        const data = await fetchJSON('Video/' + file);
-        if (data) renderVideoPool(data, videoSuper);
+        try {
+            const data = await fetchJSON('Video/' + file);
+            if (data && typeof renderVideoPool === 'function') {
+                renderVideoPool(data, videoSuper);
+            }
+        } catch (e) {
+            console.error('Error loading video pool:', e);
+        }
     }
     
     // Load Audio Pools
     const audioSuper = document.getElementById('audio-super-pool-content');
     for (let i = 1; i <= 10; i++) {
-        const data = await fetchJSON(`Audio/Pool${i}.json`);
-        if (data) renderAudioPool(data, audioSuper);
+        try {
+            const data = await fetchJSON(`Audio/Pool${i}.json`);
+            if (data && typeof renderAudioPool === 'function') {
+                renderAudioPool(data, audioSuper);
+            }
+        } catch (e) {
+            console.error('Error loading audio pool:', e);
+        }
     }
 
     // Load Masters

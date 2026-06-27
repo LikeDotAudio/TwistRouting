@@ -59,15 +59,13 @@
         }
 
         .panel {
-            background: var(--panel-bg);
-            border: 1px solid rgba(0, 255, 255, 0.3);
-            border-radius: 8px;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+            flex: 1;
+            background-color: var(--panel-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
             overflow-y: auto;
-            min-height: 0;
+            overflow-x: hidden; /* Prevent horizontal scrollbars */
         }
 
         .panel-title {
@@ -171,10 +169,10 @@
         .twist-container {
             width: 45%;
             min-height: 200px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px dashed rgba(0, 255, 255, 0.2);
-            border-radius: 12px;
+            padding: 30px 10px 10px 55px; /* Leave room for LCARS borders */
+            background: transparent;
+            border: none;
+            border-radius: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -183,20 +181,48 @@
             transition: all 0.3s ease;
         }
 
+        .twist-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100px;
+            height: 100%;
+            border-left: 45px solid var(--lcars-color, #ffaa00);
+            border-top: 20px solid var(--lcars-color, #ffaa00);
+            border-top-left-radius: 25px;
+            border-bottom-left-radius: 25px;
+            box-sizing: border-box;
+            z-index: 0;
+        }
+
+        .twist-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 110px;
+            right: 0;
+            height: 20px;
+            background-color: var(--lcars-color, #ffaa00);
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+            z-index: 0;
+        }
+
         .twist-container:hover {
-            border-color: var(--cyan);
-            box-shadow: var(--glow-cyan);
-            background: rgba(0, 20, 40, 0.6);
+            opacity: 0.9;
         }
 
         .twist-title {
-            margin-top: 10px;
-            margin-bottom: 10px;
-            font-size: 12px;
-            color: var(--cyan);
+            position: absolute;
+            top: 3px;
+            right: 15px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #000 !important;
             letter-spacing: 2px;
             text-transform: uppercase;
-            text-align: center;
+            z-index: 2;
         }
 
         /* SVG Helix Animation */
@@ -258,26 +284,58 @@
 
         .modal-content {
             background: var(--panel-bg);
-            border: 1px solid var(--cyan);
-            box-shadow: var(--glow-cyan);
-            border-radius: 12px;
+            border: none;
+            border-radius: 0;
             width: 80%;
             max-width: 800px;
             min-height: 500px;
             max-height: 80vh;
-            padding: 30px;
+            padding: 50px 20px 20px 90px;
             display: flex;
             flex-direction: column;
             position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .modal-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 150px;
+            height: 100%;
+            border-left: 70px solid var(--lcars-color, #ffaa00);
+            border-top: 30px solid var(--lcars-color, #ffaa00);
+            border-top-left-radius: 50px;
+            border-bottom-left-radius: 50px;
+            box-sizing: border-box;
+            z-index: 0;
+        }
+
+        .modal-content::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 160px;
+            right: 0;
+            height: 30px;
+            background-color: var(--lcars-color, #ffaa00);
+            border-top-right-radius: 15px;
+            border-bottom-right-radius: 15px;
+            z-index: 0;
         }
 
         .modal-close {
             position: absolute;
-            top: 20px; right: 20px;
-            color: var(--magenta);
+            top: 0; 
+            right: 15px;
+            color: #000;
             font-size: 28px;
+            font-weight: bold;
             cursor: pointer;
             transition: 0.2s;
+            z-index: 3;
+            line-height: 30px;
         }
 
         .modal-close:hover {
@@ -286,14 +344,16 @@
         }
 
         .modal-title {
-            color: var(--cyan);
-            font-size: 20px;
+            position: absolute;
+            top: 7px;
+            right: 50px; /* Leave space for the close button */
+            margin: 0;
+            font-size: 16px;
+            font-weight: bold;
+            color: #000 !important;
             letter-spacing: 3px;
-            text-transform: uppercase;
-            border-bottom: 1px solid rgba(0, 255, 255, 0.3);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            text-shadow: var(--glow-cyan);
+            z-index: 2;
+            text-shadow: none;
         }
 
         .matrix-container {
@@ -387,9 +447,10 @@
             background: transparent;
             border: none;
             border-radius: 0;
-            padding: 35px 10px 10px 75px;
-            margin-bottom: 30px;
+            padding: 27px 2px 2px 62px; /* Very tight padding: 2px gap from 60px spine */
+            margin-bottom: 25px;
             box-shadow: none;
+            cursor: pointer; /* Suggests the spine is clickable */
         }
         
         .super-pool-container::before {
@@ -423,6 +484,7 @@
         .super-pool-content {
             position: relative;
             z-index: 1;
+            cursor: default; /* Reset cursor for content inside */
         }
 
         .video-super-pool {
@@ -441,6 +503,7 @@
             letter-spacing: 3px;
             color: #000;
             z-index: 2;
+            cursor: pointer;
         }
         
         .super-pool-title span {
@@ -448,9 +511,9 @@
         }
 
         .input-group {
-            margin-bottom: 15px;
-            padding: 10px;
-            background: rgba(0,0,0,0.3);
+            margin-bottom: 2px;
+            padding: 2px;
+            background: transparent;
             border-radius: 8px;
         }
 
@@ -548,19 +611,25 @@
     </header>
 
     <div class="container">
-        <div class="panel">
-            <div class="panel-title">DATA INGRESS</div>
-            
-            <div class="super-pool-container video-super-pool">
-                <div class="super-pool-title foldable-header" style="color: var(--magenta); border-bottom-color: var(--magenta);" onclick="togglePool(this)">
+        <div class="panel ingress-panel">
+            <div class="super-pool-container productions-super-pool" onclick="toggleSuperPool(event, this)">
+                <div class="super-pool-title foldable-header" style="color: #7CFC00; border-bottom-color: #7CFC00;">
+                    <span>PRODUCTIONS</span><span class="fold-icon">▼</span>
+                </div>
+                <div class="super-pool-content" id="productions-super-pool-content">
+                </div>
+            </div>
+
+            <div class="super-pool-container video-super-pool" onclick="toggleSuperPool(event, this)">
+                <div class="super-pool-title foldable-header" style="color: var(--magenta); border-bottom-color: var(--magenta);">
                     <span>VIDEO POOLS</span><span class="fold-icon">▼</span>
                 </div>
                 <div class="super-pool-content" id="video-super-pool-content">
                 </div>
             </div>
 
-            <div class="super-pool-container audio-super-pool">
-                <div class="super-pool-title foldable-header" style="color: var(--cyan); border-bottom-color: var(--cyan);" onclick="togglePool(this)">
+            <div class="super-pool-container audio-super-pool" onclick="toggleSuperPool(event, this)">
+                <div class="super-pool-title foldable-header" style="color: var(--cyan); border-bottom-color: var(--cyan);">
                     <span>AUDIO POOLS</span><span class="fold-icon">▼</span>
                 </div>
                 <div class="super-pool-content" id="audio-super-pool-content">
@@ -591,13 +660,13 @@
         </div>
     </div>
 
-    <script src="js/globals.js?v=2"></script>
-    <script src="js/poolVideo.js?v=3"></script>
-    <script src="js/poolAudio.js?v=2"></script>
-    <script src="js/visuals.js?v=2"></script>
-    <script src="js/matrix.js?v=2"></script>
-    <script src="js/dragDrop.js?v=2"></script>
-    <script src="js/productions.js?v=2"></script>
-    <script src="js/app.js?v=2"></script>
+    <script src="js/globals.js?v=6"></script>
+    <script src="js/poolVideo.js?v=5"></script>
+    <script src="js/poolAudio.js?v=5"></script>
+    <script src="js/visuals.js?v=5"></script>
+    <script src="js/matrix.js?v=5"></script>
+    <script src="js/dragDrop.js?v=5"></script>
+    <script src="js/productions.js?v=5"></script>
+    <script src="js/app.js?v=5"></script>
 </body>
 </html>
