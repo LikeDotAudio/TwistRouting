@@ -940,38 +940,8 @@
 <body>
 
     <div class="container">
+        <!-- SOURCES super-pools are built dynamically by reading Sources/ — see js/sources.js -->
         <div class="panel ingress-panel">
-            <div class="super-pool-container video-super-pool" onclick="toggleSuperPool(event, this)">
-                <div class="super-pool-title foldable-header">
-                    <span>VIDEO</span><span class="fold-icon">▼</span>
-                </div>
-                <div class="super-pool-content" id="video-super-pool-content">
-                </div>
-            </div>
-
-            <div class="super-pool-container audio-super-pool" onclick="toggleSuperPool(event, this)">
-                <div class="super-pool-title foldable-header">
-                    <span>AUDIO</span><span class="fold-icon">▼</span>
-                </div>
-                <div class="super-pool-content" id="audio-super-pool-content">
-                </div>
-            </div>
-
-            <div class="super-pool-container productions-super-pool" onclick="toggleSuperPool(event, this)">
-                <div class="super-pool-title foldable-header">
-                    <span>PROD</span><span class="fold-icon">▼</span>
-                </div>
-                <div class="super-pool-content" id="productions-super-pool-content">
-                </div>
-            </div>
-
-            <div class="super-pool-container playout-super-pool" onclick="toggleSuperPool(event, this)">
-                <div class="super-pool-title foldable-header">
-                    <span>PLAYOUT</span><span class="fold-icon">▼</span>
-                </div>
-                <div class="super-pool-content" id="playout-super-pool-content">
-                </div>
-            </div>
         </div>
 
         <div class="sidebar-sash" id="sidebar-sash" title="Drag to resize the sources sidebar"></div>
@@ -1013,6 +983,7 @@
     <script src="js/dragDrop.js?v=41"></script>
     <script src="js/productions.js?v=41"></script>
     <script src="js/poolPlayout.js?v=41"></script>
+    <script src="js/sources.js?v=41"></script>
     <script src="js/topbar.js?v=41"></script>
     <script src="js/app.js?v=41"></script>
 </body>

@@ -31,50 +31,6 @@ function makeMediaGroup(container, title, color, depth) {
     return content;
 }
 
-// Recursively render a media tree (e.g. Audio/ or Video/) into a super-pool:
-// every *.json becomes a pool, every subfolder becomes a nested collapsible
-// group. Discovery is dynamic — drop in a new folder or file and it appears,
-// provided the static server exposes directory listings.
-async function renderMediaTree(baseUrl, container, kind, depth, inheritColor, parentLabel) {
-    const { dirs, files } = await listDirectory(baseUrl);
-
-    // Loose files at this level render as standalone pools.
-    for (let fi = 0; fi < files.length; fi++) {
-        const data = await fetchJSON(baseUrl + files[fi].href);
-        if (!data) continue;
-        // Origin shown when this box's feeds are dropped: "1st Floor — STAGEBOX 202".
-        data.origin = parentLabel ? `${parentLabel} — ${data.name}` : data.name;
-        if (kind === 'audio') {
-            const color = inheritColor || AUDIO_POOL_COLORS[fi % AUDIO_POOL_COLORS.length];
-            if (typeof renderAudioPool === 'function') renderAudioPool(data, container, color);
-        } else if (typeof renderVideoPool === 'function') {
-            renderVideoPool(data, container);
-        }
-    }
-
-    // Subfolders become nested groups; top-level folders pick a distinct colour
-    // from the palette, and that colour is inherited by everything inside them.
-    for (let d = 0; d < dirs.length; d++) {
-        const groupColor = depth === 0
-            ? AUDIO_POOL_COLORS[d % AUDIO_POOL_COLORS.length]
-            : (inheritColor || AUDIO_POOL_COLORS[d % AUDIO_POOL_COLORS.length]);
-        const content = makeMediaGroup(container, dirs[d].name, groupColor, depth);
-        await renderMediaTree(baseUrl + dirs[d].href, content, kind, depth + 1, groupColor, dirs[d].name);
-    }
-}
-
-// Load every *.json in a (dynamically discovered) folder as an array of program
-// objects, in natural filename order.
-async function loadProgramFolder(baseUrl) {
-    const { files } = await listDirectory(baseUrl);
-    const out = [];
-    for (const f of files) {
-        const data = await fetchJSON(baseUrl + f.href);
-        if (data) out.push(data);
-    }
-    return out;
-}
-
 // Distinct colours for destination tabs (each tab's tab + content L-bar match).
 const DEST_TAB_COLORS = ['#9C6B9C', '#3786FF', '#5CB8C4', '#D45F10', '#C2B74B', '#97587B', '#46A06E', '#C19880'];
 
@@ -123,34 +79,14 @@ async function initApp() {
     for (let di = 0; di < destDir.dirs.length; di++) {
         const cat = destDir.dirs[di];
         const colorRgb = DEST_GROUP_COLORS[di % DEST_GROUP_COLORS.length];
-        const catGroup = TopBar.addGroup(cat.name.toUpperCase(), { color: colorRgb, collapsed: di !== 0 });
+        const catGroup = TopBar.addGroup(cat.name.toUpperCase(), { color: colorRgb, collapsed: true });
         await addDestinationTree('Destinations/' + cat.href, catGroup, colorRgb);
     }
 
     // ===== SOURCES — draggable signals fed into destination twists =====
-
-    // Productions as sources: their program outputs are exposed as draggables;
-    // they have no input twists here (those belong to Control Rooms).
-    const productions = await loadProgramFolder('Sources/Productions/');
-    const productionsSuper = document.getElementById('productions-super-pool-content');
-    if (typeof renderProductionInputs === 'function') {
-        renderProductionInputs(productions, productionsSuper);
-    }
-
-    // Video + Audio stage boxes (floors → boxes), as nested collapsible groups.
-    const videoSuper = document.getElementById('video-super-pool-content');
-    await renderMediaTree('Sources/Video/', videoSuper, 'video', 0, null);
-
-    const audioSuper = document.getElementById('audio-super-pool-content');
-    await renderMediaTree('Sources/Audio/', audioSuper, 'audio', 0, null);
-
-    // Playouts: each file is a playout of 4 players × 4 videos, every video a
-    // stack of one video + four audio feeds. Discovered from Playout/index.json.
-    const playouts = await loadProgramFolder('Sources/Playout/');
-    const playoutSuper = document.getElementById('playout-super-pool-content');
-    if (typeof renderPlayoutPool === 'function') {
-        playouts.forEach(p => renderPlayoutPool(p, playoutSuper));
-    }
+    // Categories, folders and pools are ALL discovered by reading Sources/ —
+    // nothing here names Video/Audio/Productions/Playout. See js/sources.js.
+    await renderSourcesPanel(document.querySelector('.ingress-panel'));
 
     initializeDraggables();
     initializeTwists();
