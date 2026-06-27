@@ -176,27 +176,51 @@
     const KINDS = [];
     function register(test, title, render) { KINDS.push({ test, title, render }); }
 
+    // Which production this twist belongs to (data attr, else the LCARS title
+    // rail of its enclosing program row).
+    function prodNameOf(twist) {
+        if (twist.dataset.prodName) return twist.dataset.prodName;
+        const row = twist.closest('.program-row');
+        const t = row && row.querySelector('.program-title');
+        return t ? t.innerText.trim() : '';
+    }
+
+    // Returns true if this twist has a dedicated editor (and opens it).
+    function openForTwist(twist) {
+        const name = (twist.querySelector('.twist-title') || {}).innerText || '';
+        const config = parseConfig(twist);
+        const kind = KINDS.find(k => k.test(name));
+        if (!kind) return false;
+        const color = twist.style.getPropertyValue('--lcars-color') || '#646DCC';
+        const prodName = prodNameOf(twist);
+        const title = prodName ? `${prodName} · ${kind.title}` : kind.title;
+        setHash(prodName, name);
+        open(title, color, (body) => kind.render(body, twist, config));
+        return true;
+    }
+
+    // Deep link: open the editor named by the URL hash (#/<prod-slug>/<twist-slug>).
+    // Returns true if a matching twist was found and opened.
+    function openFromHash() {
+        const m = (location.hash || '').match(/^#\/([^/]+)\/([^/]+)/);
+        if (!m) return false;
+        const prodSlug = m[1], twistSlug = m[2];
+        const twist = [...document.querySelectorAll('.twist-container')].find(t => {
+            const name = (t.querySelector('.twist-title') || {}).innerText || '';
+            return slug(name) === twistSlug && slug(prodNameOf(t)) === prodSlug;
+        });
+        if (!twist) return false;
+        return openForTwist(twist);
+    }
+
     window.Editors = {
         register, addStyles, open, close,
         // shared helpers used by the editor modules:
         gatherSources, parseConfig, channelsFor, knob, meterBar,
         pushTimer: (t) => timers.push(t),
-        // Returns true if this twist has a dedicated editor (and opens it).
-        openForTwist(twist) {
-            const name = (twist.querySelector('.twist-title') || {}).innerText || '';
-            const config = parseConfig(twist);
-            const kind = KINDS.find(k => k.test(name));
-            if (!kind) return false;
-            const color = twist.style.getPropertyValue('--lcars-color') || '#646DCC';
-            // Which production this twist belongs to (data attr, else the LCARS
-            // title rail of its enclosing program row).
-            const row = twist.closest('.program-row');
-            const prodName = twist.dataset.prodName
-                || (row && row.querySelector('.program-title') ? row.querySelector('.program-title').innerText.trim() : '');
-            const title = prodName ? `${prodName} · ${kind.title}` : kind.title;
-            setHash(prodName, name);
-            open(title, color, (body) => kind.render(body, twist, config));
-            return true;
-        },
+        openForTwist, openFromHash,
     };
+
+    // Open from the URL on load (once twists exist) and on manual hash changes.
+    window.addEventListener('hashchange', openFromHash);
 })();

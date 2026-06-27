@@ -59,6 +59,20 @@
         .am-vu{width:16px;height:230px;border-radius:5px;background:#0c1322;overflow:hidden;display:flex;flex-direction:column-reverse;}
         .am-vu > i{display:block;width:100%;height:0%;background:linear-gradient(#19c54b,#e6e23a 70%,#ff3b3b);}
         .am-db{font-size:11px;font-weight:bold;color:#9fb6cc;}
+        /* Aux sends — two banks: MM (mix-minus) + MONITOR, 4 each */
+        .am-aux{width:100%;}
+        .am-aux-h{font-size:8px;letter-spacing:1px;color:#7e93b5;text-align:center;margin-bottom:5px;text-transform:uppercase;}
+        .am-aux-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px 2px;justify-items:center;}
+        .am-aux .am-knob{width:28px;height:28px;border-width:2px;}
+        .am-aux .am-knob::after{height:9px;top:3px;transform-origin:50% 11px;}
+        .am-aux .am-klabel{font-size:7px;margin-top:-3px;white-space:nowrap;}
+        /* MASTER as its own always-visible tab pinned to the right of the console */
+        .am-master-tab{flex:0 0 auto;align-self:stretch;display:flex;flex-direction:column;
+            background:#160f2a;border:2px solid #4a3a6e;border-radius:10px 44px 44px 10px;padding:12px 14px;}
+        .am-master-h{color:#d8c8ff;font-size:11px;letter-spacing:2px;font-weight:900;text-align:center;
+            text-transform:uppercase;margin-bottom:8px;}
+        .am-master-tab .am-strip.master{border:none;background:transparent;padding:0;}
+        .am-master-tab .am-strip.master .am-name{display:none;}
         /* Sub-mix breakout (a spilled group's individual channels) */
         .am-submix{margin-top:16px;background:#0a1120;border:1px solid #2c3a5a;border-left:5px solid var(--cyan,#00ffff);
             border-radius:6px 14px 14px 6px;padding:12px 14px;}
@@ -134,6 +148,15 @@
         const strips = document.createElement('div');
         strips.className = 'am-strips';
         console_.appendChild(strips);
+
+        // MASTER lives in its own tab pinned to the right — always visible, never
+        // scrolled or swapped by the layer switch.
+        const masterTab = document.createElement('div');
+        masterTab.className = 'am-master-tab';
+        masterTab.innerHTML = `<div class="am-master-h">Master Out</div>`;
+        masterTab.appendChild(stripEl({ label: 'MASTER' }, { master: true }));
+        console_.appendChild(masterTab);
+
         body.appendChild(console_);
 
         const submix = document.createElement('div');
@@ -201,6 +224,17 @@
                 ms.querySelector('.mute').addEventListener('click', e => e.target.classList.toggle('on'));
                 ms.querySelector('.solo').addEventListener('click', e => e.target.classList.toggle('on'));
                 el.appendChild(ms);
+
+                // Aux sends: mix-minus bank (MM 1–4) then monitor bank (MON 1–4).
+                const aux = document.createElement('div');
+                aux.className = 'am-aux';
+                aux.innerHTML = `<div class="am-aux-h">Aux Sends</div>`;
+                const ag = document.createElement('div');
+                ag.className = 'am-aux-grid';
+                ['MM 1', 'MM 2', 'MM 3', 'MM 4'].forEach(l => ag.appendChild(knob(l, 0.3, '#FF9C63')));
+                ['MON 1', 'MON 2', 'MON 3', 'MON 4'].forEach(l => ag.appendChild(knob(l, 0.3, '#3FC1C9')));
+                aux.appendChild(ag);
+                el.appendChild(aux);
             } else {
                 el.appendChild(knob('BAL', 0.5, '#d8c8ff'));
             }
@@ -223,7 +257,6 @@
         function draw() {
             strips.innerHTML = '';
             chans.slice(layer * LAYER, layer * LAYER + LAYER).forEach(c => strips.appendChild(stripEl(c, {})));
-            strips.appendChild(stripEl({ label: 'MASTER' }, { master: true }));
         }
         draw();
     }
