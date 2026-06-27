@@ -97,8 +97,9 @@ function renderPrograms(programs) {
                             <button class="record-btn" onclick="toggleRecord(event, this)">RECORD</button>
                             <span class="recording-indicator">RECORDING...</span>
                         </div>` : '';
+            const prodAttrs = `data-prod-id="${pgm.id}" data-prod-name="${(titleText || '').replace(/"/g, '&quot;')}"`;
             const twistHtml = `
-                    <div class="twist-container${isSmall ? ' monitor-twist' : ''}" ${twistConfig} style="--lcars-color: ${lcarsColor}; ${sizing}">
+                    <div class="twist-container${isSmall ? ' monitor-twist' : ''}" ${twistConfig} ${prodAttrs} style="--lcars-color: ${lcarsColor}; ${sizing}">
                         <div class="twist-title">${twistName}</div>
                         <div class="twist-lip" title="Fold / unfold strand" onclick="toggleHelix(event, this)"></div>
                         <div class="twist-foldbar" title="Fold / unfold strand" onclick="toggleHelix(event, this)"></div>

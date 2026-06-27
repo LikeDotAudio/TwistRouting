@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import subprocess
 import ftplib
@@ -135,13 +136,23 @@ def upload_to_ftp():
     # Refresh manifests first so they reflect the current tree and get uploaded.
     generate_manifests(project_dir)
 
-    # Manifests are refreshed above; any that actually changed are picked up by
-    # git below, so the upload stays incremental (just the real diff).
-    to_upload, to_delete = get_changed_files(project_dir)
-    if not to_upload and not to_delete:
-        # Nothing changed — upload the whole project instead.
-        print("No changes detected — uploading everything.")
-        to_upload = get_all_files(project_dir)
+    # `--all` (or `-a` / `full`) forces a complete upload. Use this after adding
+    # files that were committed but never deployed: the git-diff path below skips
+    # anything that reads as "clean", so a manifest can end up referencing files
+    # the server doesn't have (404s). A full upload guarantees they all go up.
+    force_all = any(a in ('--all', '-a', 'full') for a in sys.argv[1:])
+
+    if force_all:
+        print("Full upload requested (--all) — uploading every file.")
+        to_upload, to_delete = get_all_files(project_dir), []
+    else:
+        # Manifests are refreshed above; any that actually changed are picked up by
+        # git below, so the upload stays incremental (just the real diff).
+        to_upload, to_delete = get_changed_files(project_dir)
+        if not to_upload and not to_delete:
+            # Nothing changed — upload the whole project instead.
+            print("No changes detected — uploading everything.")
+            to_upload = get_all_files(project_dir)
 
     print(f"Connecting to FTP server {FTP_HOST} (Explicit FTPS) as {FTP_USER}...")
     try:
