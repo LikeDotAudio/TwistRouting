@@ -154,6 +154,16 @@ def upload_to_ftp():
             print("No changes detected — uploading everything.")
             to_upload = get_all_files(project_dir)
 
+    # Upload order: root files first, then js/, then everything else — so the page
+    # shell (index.htm) and its scripts land before the larger data tree.
+    def upload_rank(rel_path):
+        if '/' not in rel_path:
+            return 0  # root files (index.htm, *.json at root, ...)
+        if rel_path.split('/', 1)[0] == 'js':
+            return 1  # js/ and js/editors/...
+        return 2      # the rest (Sources/, Destinations/, ...)
+    to_upload.sort(key=lambda p: (upload_rank(p), p))
+
     print(f"Connecting to FTP server {FTP_HOST} (Explicit FTPS) as {FTP_USER}...")
     try:
         ftp = ftplib.FTP_TLS(FTP_HOST)
