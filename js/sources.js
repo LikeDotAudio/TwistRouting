@@ -34,20 +34,32 @@ function renderSourceLeaf(data, container, kind, color) {
 async function renderSourceTree(baseUrl, container, depth, inheritColor, parentLabel) {
     const { dirs, files } = await listDirectory(baseUrl);
 
-    for (let fi = 0; fi < files.length; fi++) {
-        const data = await fetchJSON(baseUrl + files[fi].href);
-        if (!data) continue;
+    // Fetch this folder's leaf files concurrently, then render them in order.
+    const datas = await Promise.all(files.map(f => fetchJSON(baseUrl + f.href)));
+    datas.forEach((data, fi) => {
+        if (!data) return;
         // Origin shown when feeds are dropped: "1st Floor — STAGEBOX 202".
         data.origin = parentLabel ? `${parentLabel} — ${data.name}` : data.name;
         const color = inheritColor || AUDIO_POOL_COLORS[fi % AUDIO_POOL_COLORS.length];
         renderSourceLeaf(data, container, inferPoolKind(data), color);
-    }
+    });
 
-    for (let d = 0; d < dirs.length; d++) {
-        const groupColor = inheritColor || AUDIO_POOL_COLORS[d % AUDIO_POOL_COLORS.length];
-        const content = makeMediaGroup(container, dirs[d].name, groupColor, depth);
-        await renderSourceTree(baseUrl + dirs[d].href, content, depth + 1, groupColor, dirs[d].name);
-    }
+    // Build the nested group headers from the manifest, but DON'T crawl into them
+    // yet — each subtree (e.g. a floor's stage boxes) loads the first time its
+    // group is expanded. So only the bars come from index.json; contents are
+    // fetched on demand.
+    dirs.forEach((d, idx) => {
+        const groupColor = inheritColor || AUDIO_POOL_COLORS[idx % AUDIO_POOL_COLORS.length];
+        const content = makeMediaGroup(container, d.name, groupColor, depth);
+        const header = content.previousElementSibling;
+        let loaded = false;
+        const load = () => {
+            if (loaded) return;
+            loaded = true;
+            renderSourceTree(baseUrl + d.href, content, depth + 1, groupColor, d.name);
+        };
+        if (header) header.addEventListener('click', load);
+    });
 }
 
 // Create a super-pool shell (LCARS spine + foldable title) and return its content
@@ -72,10 +84,10 @@ function buildSuperPool(panel, name, color) {
 async function renderSourcesPanel(panel) {
     if (!panel) return;
     const { dirs } = await listDirectory('Sources/');
-    for (let i = 0; i < dirs.length; i++) {
-        const cat = dirs[i];
+    // Build the super-pools in manifest order, then fill them in parallel.
+    await Promise.all(dirs.map((cat, i) => {
         const color = SOURCE_POOL_COLORS[i % SOURCE_POOL_COLORS.length];
         const content = buildSuperPool(panel, cat.name, color);
-        await renderSourceTree('Sources/' + cat.href, content, 0, null, null);
-    }
+        return renderSourceTree('Sources/' + cat.href, content, 0, null, null);
+    }));
 }

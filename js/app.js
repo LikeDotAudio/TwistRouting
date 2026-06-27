@@ -84,17 +84,19 @@ async function initApp() {
     // in a new category folder and it appears — no code change needed.
     const DEST_GROUP_COLORS = ['100,109,204', '160,110,180', '255,51,102', '63,193,201', '198,120,37', '120,160,90'];
     const destDir = await listDirectory('Destinations/');
-    for (let di = 0; di < destDir.dirs.length; di++) {
-        const cat = destDir.dirs[di];
+    // Build every category's bar (groups + tabs from the manifests) in parallel;
+    // program content stays lazy until a tab is opened.
+    const destLoad = Promise.all(destDir.dirs.map((cat, di) => {
         const colorRgb = DEST_GROUP_COLORS[di % DEST_GROUP_COLORS.length];
         const catGroup = TopBar.addGroup(cat.name.toUpperCase(), { color: colorRgb, collapsed: true });
-        await addDestinationTree('Destinations/' + cat.href, catGroup, colorRgb);
-    }
+        return addDestinationTree('Destinations/' + cat.href, catGroup, colorRgb);
+    }));
 
     // ===== SOURCES — draggable signals fed into destination twists =====
     // Categories, folders and pools are ALL discovered by reading Sources/ —
     // nothing here names Video/Audio/Productions/Playout. See js/sources.js.
-    await renderSourcesPanel(document.querySelector('.ingress-panel'));
+    // Run the destinations bar and the sources panel concurrently.
+    await Promise.all([destLoad, renderSourcesPanel(document.querySelector('.ingress-panel'))]);
 
     initializeDraggables();
     initializeTwists();

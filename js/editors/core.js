@@ -202,25 +202,47 @@
     }
 
     // Deep link: open the editor named by the URL hash (#/<prod-slug>/<twist-slug>).
-    // Returns true if a matching twist was found and opened.
+    // With lazy-loaded productions the target twist may not exist yet, so the
+    // request is "armed" — resolvePending() retries each time a production renders
+    // (see notifyRendered), and we best-effort click the matching tab to load it.
+    let pending = null;
     function openFromHash() {
         const m = (location.hash || '').match(/^#\/([^/]+)\/([^/]+)/);
-        if (!m) return false;
-        const prodSlug = m[1], twistSlug = m[2];
+        if (!m) { pending = null; return false; }
+        pending = { prodSlug: m[1], twistSlug: m[2] };
+        return resolvePending();
+    }
+    function resolvePending() {
+        if (!pending) return false;
+        const { prodSlug, twistSlug } = pending;
         const twist = [...document.querySelectorAll('.twist-container')].find(t => {
             const name = (t.querySelector('.twist-title') || {}).innerText || '';
             return slug(name) === twistSlug && slug(prodNameOf(t)) === prodSlug;
         });
-        if (!twist) return false;
-        return openForTwist(twist);
+        if (twist) { pending = null; return openForTwist(twist); }
+        // Not rendered yet — try to open the matching tab to trigger its lazy load.
+        const tab = [...document.querySelectorAll('.lcars-tab')].find(tb => {
+            const s = slug(tb.innerText);
+            return s && (s === prodSlug || prodSlug.indexOf(s) === 0 || s.indexOf(prodSlug) === 0);
+        });
+        if (tab && !tab.dataset.deeplinkTried) {
+            tab.dataset.deeplinkTried = '1';
+            for (let g = tab.closest('.lcars-group'); g; g = g.parentElement && g.parentElement.closest('.lcars-group')) {
+                g.classList.remove('collapsed');
+            }
+            tab.click();    // programmatic activation → lazy load → notifyRendered
+        }
+        return false;
     }
+    // Called by app code after a lazily-loaded production renders its twists.
+    function notifyRendered() { resolvePending(); }
 
     window.Editors = {
         register, addStyles, open, close,
         // shared helpers used by the editor modules:
         gatherSources, parseConfig, channelsFor, knob, meterBar,
         pushTimer: (t) => timers.push(t),
-        openForTwist, openFromHash,
+        openForTwist, openFromHash, notifyRendered,
     };
 
     // Open from the URL on load (once twists exist) and on manual hash changes.
