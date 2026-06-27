@@ -58,71 +58,69 @@ async function renderMediaTree(baseUrl, container, kind, depth, inheritColor) {
     }
 }
 
-async function initApp() {
-    // Load Productions
-    const prodFiles = ['Production 1.json', 'Production 2.json', 'Production 3.json', 'Production 4.json', 'Production 5.json',
-                       'Production 6.json', 'Production 7.json', 'Production 8.json', 'Production 9.json', 'Production 10.json'];
-    const programs = [];
-    for (let file of prodFiles) {
-        const data = await fetchJSON('Productions/' + file);
-        if (data) programs.push(data);
+// Load every *.json in a (dynamically discovered) folder as an array of program
+// objects, in natural filename order.
+async function loadProgramFolder(baseUrl) {
+    const { files } = await listDirectory(baseUrl);
+    const out = [];
+    for (const f of files) {
+        const data = await fetchJSON(baseUrl + f.href);
+        if (data) out.push(data);
     }
-    
+    return out;
+}
+
+async function initApp() {
     const tabsContainer = document.getElementById('production-tabs');
     const contentContainer = document.getElementById('production-content');
     TopBar.init(tabsContainer, contentContainer);
 
-    const prodGroup = TopBar.addGroup('PRODUCTIONS', { color: '100,109,204' });
-    programs.forEach((pgm, index) => {
-        TopBar.addTab(pgm, { group: prodGroup, active: index === 0 });
-    });
-    
-    renderPrograms(programs);
+    // ===== DESTINATIONS — consume signals via twists (matrix landing spots) =====
 
-    // Expose productions as draggable inputs (so encoders can take program outputs)
+    // Control Rooms (formerly "productions"): they take inputs only — their
+    // program outputs live on the Sources side, not here.
+    const controlRooms = await loadProgramFolder('Destinations/Control%20Rooms/');
+    const crGroup = TopBar.addGroup('CONTROL ROOMS', { color: '100,109,204' });
+    controlRooms.forEach((pgm, index) => {
+        TopBar.addTab(pgm, { group: crGroup, active: index === 0 });
+    });
+    renderPrograms(controlRooms);
+
+    // Floors — each floor folder is a group; its rooms (one *.json each) are tabs.
+    const floorsDir = await listDirectory('Destinations/Floors/');
+    for (const floorDir of floorsDir.dirs) {
+        const rooms = await loadProgramFolder('Destinations/Floors/' + floorDir.href);
+        if (!rooms.length) continue;
+        const group = TopBar.addGroup(floorDir.name.toUpperCase(), { color: '63,193,201', collapsed: true });
+        rooms.forEach((rm) => TopBar.addTab(rm, { group, active: false }));
+        renderPrograms(rooms);
+    }
+
+    // Encoders.
+    const encoders = await loadProgramFolder('Destinations/Encoders/');
+    encoders.forEach((pgm) => { pgm.color = '#ff3366'; });
+    const encGroup = TopBar.addGroup('ENCODERS', { color: '255,51,102', collapsed: true });
+    encoders.forEach((pgm) => {
+        TopBar.addTab(pgm, { group: encGroup, active: false });
+    });
+    renderPrograms(encoders);
+
+    // ===== SOURCES — draggable signals fed into destination twists =====
+
+    // Productions as sources: their program outputs are exposed as draggables;
+    // they have no input twists here (those belong to Control Rooms).
+    const productions = await loadProgramFolder('Sources/Productions/');
     const productionsSuper = document.getElementById('productions-super-pool-content');
     if (typeof renderProductionInputs === 'function') {
-        renderProductionInputs(programs, productionsSuper);
+        renderProductionInputs(productions, productionsSuper);
     }
 
-    // Load Floors (between Productions and Master) — each with monitors, IEMs and foldback
-    const floorFiles = ['1st Floor.json', '2nd Floor.json', '3rd Floor.json', '4th Floor.json', '5th Floor.json'];
-    const floorPrograms = [];
-    for (let file of floorFiles) {
-        const data = await fetchJSON('Floors/' + file);
-        if (data) floorPrograms.push(data);
-    }
-    const floorGroup = TopBar.addGroup('FLOORS', { color: '63,193,201', collapsed: true });
-    floorPrograms.forEach((pgm) => {
-        TopBar.addTab(pgm, { group: floorGroup, active: false });
-    });
-    renderPrograms(floorPrograms);
-
-    // Load Video — dynamically discover the Video/ tree (floors → stage boxes)
-    // and render it as nested collapsible groups.
+    // Video + Audio stage boxes (floors → boxes), as nested collapsible groups.
     const videoSuper = document.getElementById('video-super-pool-content');
-    await renderMediaTree('Video/', videoSuper, 'video', 0, null);
+    await renderMediaTree('Sources/Video/', videoSuper, 'video', 0, null);
 
-    // Load Audio — dynamically discover the Audio/ tree (floors → stage boxes)
-    // and render it as nested collapsible groups.
     const audioSuper = document.getElementById('audio-super-pool-content');
-    await renderMediaTree('Audio/', audioSuper, 'audio', 0, null);
-
-    // Load Masters
-    const masterFiles = ['Encoder 1.json', 'Encoder 2.json', 'Encoder 4.json'];
-    const masterPrograms = [];
-    for (let file of masterFiles) {
-        const data = await fetchJSON('Master/' + file);
-        if (data) {
-            data.color = '#ff3366';
-            masterPrograms.push(data);
-        }
-    }
-    const masterGroup = TopBar.addGroup('MASTER', { color: '255,51,102', collapsed: true });
-    masterPrograms.forEach((pgm) => {
-        TopBar.addTab(pgm, { group: masterGroup, active: false });
-    });
-    renderPrograms(masterPrograms);
+    await renderMediaTree('Sources/Audio/', audioSuper, 'audio', 0, null);
 
     initializeDraggables();
     initializeTwists();

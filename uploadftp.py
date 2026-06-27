@@ -1,6 +1,39 @@
 import os
+import json
 import subprocess
 import ftplib
+
+# Roots whose folders get an index.json manifest so the web app can discover the
+# tree on any static host (no server-side directory listing required).
+MANIFEST_ROOTS = ['Sources', 'Destinations']
+
+def write_manifest(dirpath):
+    """Write index.json listing this folder's immediate children (dirs end '/')."""
+    entries = []
+    for name in sorted(os.listdir(dirpath)):
+        if name == 'index.json' or name.startswith('.'):
+            continue
+        full = os.path.join(dirpath, name)
+        if os.path.isdir(full):
+            entries.append(name + '/')
+        elif name.lower().endswith('.json'):
+            entries.append(name)
+    with open(os.path.join(dirpath, 'index.json'), 'w') as f:
+        json.dump(entries, f, indent=2)
+        f.write('\n')
+
+def generate_manifests(project_dir):
+    """Create an index.json in every folder under the manifest roots."""
+    count = 0
+    for root in MANIFEST_ROOTS:
+        root_path = os.path.join(project_dir, root)
+        if not os.path.isdir(root_path):
+            continue
+        for dirpath, dirnames, _ in os.walk(root_path):
+            dirnames[:] = [d for d in dirnames if not d.startswith('.')]
+            write_manifest(dirpath)
+            count += 1
+    print(f"Generated {count} manifest(s).")
 
 def load_env():
     env_vars = {}
@@ -82,6 +115,9 @@ def upload_to_ftp():
     FTP_PASS = env.get('FTP_PASS', '')
 
     project_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Refresh manifests first so they reflect the current tree and get uploaded.
+    generate_manifests(project_dir)
 
     to_upload, to_delete = get_changed_files(project_dir)
     if not to_upload and not to_delete:

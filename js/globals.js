@@ -26,16 +26,52 @@ async function fetchJSON(url) {
     }
 }
 
-// List an HTTP directory by parsing the autoindex HTML most dev servers return
-// (python -m http.server, nginx autoindex, etc.). Returns
-// { dirs: [{name, href}], files: [{name, href}] }, sorted naturally. Returns
-// empty arrays if the server exposes no listing — callers should treat that as
-// "nothing here" rather than an error.
+// List a directory's immediate contents, returning
+// { dirs: [{name, href}], files: [{name, href}] }, sorted naturally.
+//
+// Prefers an explicit `index.json` manifest in the folder (an array of entry
+// names, dirs marked with a trailing "/") so discovery works on ANY static host
+// — no server-side directory listing required. The manifest is written by
+// uploadftp.py at deploy time. Falls back to parsing the server's autoindex HTML
+// (python -m http.server, nginx autoindex, etc.) when no manifest is present.
 async function listDirectory(url) {
     const out = { dirs: [], files: [] };
+    const add = (name, isDir, href) => {
+        if (!name || name === '.' || name.toLowerCase() === 'index.json') return;
+        if (isDir) out.dirs.push({ name, href });
+        else if (name.toLowerCase().endsWith('.json')) out.files.push({ name, href });
+    };
+    const sortAndReturn = () => {
+        const byName = (a, b) => a.name.localeCompare(b.name, undefined, { numeric: true });
+        out.dirs.sort(byName);
+        out.files.sort(byName);
+        return out;
+    };
+
+    // 1) Manifest (preferred).
+    try {
+        const res = await fetch(url + 'index.json', { cache: 'no-store' });
+        if (res.ok) {
+            const manifest = JSON.parse(await res.text());
+            if (Array.isArray(manifest)) {
+                manifest.forEach(entry => {
+                    if (typeof entry !== 'string' || !entry) return;
+                    const isDir = entry.endsWith('/');
+                    const name = entry.replace(/\/$/, '');
+                    const href = encodeURIComponent(name) + (isDir ? '/' : '');
+                    add(name, isDir, href);
+                });
+                return sortAndReturn();
+            }
+        }
+    } catch (e) {
+        /* No manifest / not JSON — fall back to autoindex below. */
+    }
+
+    // 2) Autoindex HTML fallback.
     try {
         const res = await fetch(url, { cache: 'no-store' });
-        if (!res.ok) return out;
+        if (!res.ok) return sortAndReturn();
         const html = await res.text();
         const doc = new DOMParser().parseFromString(html, 'text/html');
         doc.querySelectorAll('a[href]').forEach(a => {
@@ -46,17 +82,12 @@ async function listDirectory(url) {
                 || href.startsWith('..') || /^[a-z]+:\/\//i.test(href)) return;
             const isDir = href.endsWith('/');
             const name = decodeURIComponent(href.replace(/\/$/, ''));
-            if (!name || name === '.') return;
-            if (isDir) out.dirs.push({ name, href });
-            else if (name.toLowerCase().endsWith('.json')) out.files.push({ name, href });
+            add(name, isDir, href);
         });
     } catch (e) {
         console.warn('listDirectory failed for', url, e);
     }
-    const byName = (a, b) => a.name.localeCompare(b.name, undefined, { numeric: true });
-    out.dirs.sort(byName);
-    out.files.sort(byName);
-    return out;
+    return sortAndReturn();
 }
 
 function toggleSuperPool(event, container) {
