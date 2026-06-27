@@ -239,19 +239,30 @@
             tab.className = 'lcars-tab' + (active ? ' active' : '');
             tab.style.setProperty('--lcars', color);
             tab.innerText = pgm.name;
-            tab.onclick = (e) => {
-                switchTab(pgm.id, e);
-                // A genuine user pick tucks the whole destination nav away. Guard on
-                // isTrusted so the programmatic auto-select fired when a group is
-                // first expanded (toggleGroup) doesn't collapse it right back.
-                if (e.isTrusted) collapseAllGroups();
-            };
             host.appendChild(tab);
 
             const cont = document.createElement('div');
             cont.id = 'tab-' + pgm.id;
             cont.className = 'tab-content' + (active ? ' active' : '');
             contentContainer.appendChild(cont);
+
+            // Lazy content: opts.onActivate(pgm, cont) runs once, the first time the
+            // tab is shown — so a tab's heavy program JSON / twists load on demand.
+            let loaded = false;
+            const activate = () => {
+                if (loaded) return;
+                loaded = true;
+                if (typeof opts.onActivate === 'function') opts.onActivate(pgm, cont);
+            };
+            tab.onclick = (e) => {
+                activate();
+                switchTab(pgm.id, e);
+                // A genuine user pick tucks the whole destination nav away. Guard on
+                // isTrusted so the programmatic auto-select fired when a group is
+                // first expanded (toggleGroup) doesn't collapse it right back.
+                if (e.isTrusted) collapseAllGroups();
+            };
+            if (active) activate();
             return tab;
         },
     };

@@ -59,6 +59,10 @@
         .am-vu{width:16px;height:230px;border-radius:5px;background:#0c1322;overflow:hidden;display:flex;flex-direction:column-reverse;}
         .am-vu > i{display:block;width:100%;height:0%;background:linear-gradient(#19c54b,#e6e23a 70%,#ff3b3b);}
         .am-db{font-size:11px;font-weight:bold;color:#9fb6cc;}
+        /* EQ + PAN + sends bank — collapses ("tucks up") on spilled sub-strips */
+        .am-rotaries{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;
+            overflow:hidden;max-height:520px;opacity:1;transition:max-height .28s ease,opacity .2s ease;}
+        .am-rotaries.tucked{max-height:0;opacity:0;gap:0;}
         /* Aux sends — two banks: MM (mix-minus) + MONITOR, 4 each */
         .am-aux{width:100%;}
         .am-aux-h{font-size:8px;letter-spacing:1px;color:#7e93b5;text-align:center;margin-bottom:5px;text-transform:uppercase;}
@@ -173,7 +177,7 @@
             submix.appendChild(h);
             const row = document.createElement('div');
             row.className = 'am-strips am-substrips';
-            group.children.forEach(ch => row.appendChild(stripEl(ch, {})));
+            group.children.forEach(ch => row.appendChild(stripEl(ch, { compact: true })));
             submix.appendChild(row);
             submix.style.display = '';
         }
@@ -213,17 +217,17 @@
             }
 
             if (!master) {
+                // EQ, PAN and the aux sends live in one collapsible bank that tucks
+                // upward when this strip is part of a spilled sub-mix — leaving just
+                // M/S + fader for a quick balance view.
+                const rot = document.createElement('div');
+                rot.className = 'am-rotaries' + (opts.compact ? ' tucked' : '');
+
                 const eq = document.createElement('div');
                 eq.className = 'am-eq';
                 ['HI', 'MID', 'LO'].forEach(l => eq.appendChild(knob(l, 0.5, c.color)));
-                el.appendChild(eq);
-                el.appendChild(knob('PAN', 0.5, '#9fb6cc'));
-                const ms = document.createElement('div');
-                ms.className = 'am-ms';
-                ms.innerHTML = `<button class="mute">M</button><button class="solo">S</button>`;
-                ms.querySelector('.mute').addEventListener('click', e => e.target.classList.toggle('on'));
-                ms.querySelector('.solo').addEventListener('click', e => e.target.classList.toggle('on'));
-                el.appendChild(ms);
+                rot.appendChild(eq);
+                rot.appendChild(knob('PAN', 0.5, '#9fb6cc'));
 
                 // Aux sends: mix-minus bank (MM 1–4) then monitor bank (MON 1–4).
                 const aux = document.createElement('div');
@@ -234,7 +238,15 @@
                 ['MM 1', 'MM 2', 'MM 3', 'MM 4'].forEach(l => ag.appendChild(knob(l, 0.3, '#FF9C63')));
                 ['MON 1', 'MON 2', 'MON 3', 'MON 4'].forEach(l => ag.appendChild(knob(l, 0.3, '#3FC1C9')));
                 aux.appendChild(ag);
-                el.appendChild(aux);
+                rot.appendChild(aux);
+                el.appendChild(rot);
+
+                const ms = document.createElement('div');
+                ms.className = 'am-ms';
+                ms.innerHTML = `<button class="mute">M</button><button class="solo">S</button>`;
+                ms.querySelector('.mute').addEventListener('click', e => e.target.classList.toggle('on'));
+                ms.querySelector('.solo').addEventListener('click', e => e.target.classList.toggle('on'));
+                el.appendChild(ms);
             } else {
                 el.appendChild(knob('BAL', 0.5, '#d8c8ff'));
             }

@@ -992,5 +992,14 @@
     <script src="js/topbar.js?v=43"></script>
     <script src="js/app.js?v=43"></script>
     <script src="js/clock.js?v=43"></script>
+    <script>
+        // Offline cache: after the first load the app serves from the local
+        // machine and stops hitting the website. See sw.js.
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW registration failed', e));
+            });
+        }
+    </script>
 </body>
 </html>

@@ -64,15 +64,17 @@
             background:radial-gradient(circle at 50% 30%,#0d1730 0%,#03060f 85%);
             font-family:Arial,Helvetica,sans-serif;color:#e0f0ff;}
         .ed-overlay.open{display:flex;}
-        .ed-topbar{flex:0 0 auto;display:flex;align-items:center;gap:18px;height:54px;padding:0 10px 0 0;}
-        .ed-topbar::before{content:'';width:160px;height:100%;
-            border-left:64px solid var(--ed-color,#646DCC);border-top:22px solid var(--ed-color,#646DCC);
-            border-top-left-radius:46px;border-bottom-left-radius:46px;box-sizing:border-box;}
-        .ed-title{flex:1;font-weight:900;letter-spacing:3px;font-size:18px;text-transform:uppercase;
-            margin-left:-150px;color:#fff;text-shadow:0 0 10px rgba(0,0,0,.6);}
-        .ed-close{cursor:pointer;font-size:30px;font-weight:bold;line-height:1;color:#000;
-            background:var(--ed-color,#646DCC);border-radius:14px;padding:2px 16px 5px;}
-        .ed-close:hover{filter:brightness(1.15);box-shadow:0 0 14px rgba(255,255,255,.4);}
+        /* Full-width LCARS header rail: solid colour bar spanning the whole width,
+           title at the left elbow, the X embedded as the right end-cap. */
+        .ed-topbar{flex:0 0 auto;display:flex;align-items:stretch;height:48px;
+            background:var(--ed-color,#646DCC);border-radius:0 0 16px 44px;overflow:hidden;}
+        .ed-title{flex:1;display:flex;align-items:center;font-weight:900;letter-spacing:3px;
+            font-size:17px;text-transform:uppercase;color:#000;padding-left:78px;
+            white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .ed-close{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:66px;
+            cursor:pointer;font-size:30px;font-weight:bold;line-height:1;color:#000;
+            box-shadow:inset 2px 0 0 rgba(0,0,0,.25);}
+        .ed-close:hover{background:rgba(0,0,0,.18);}
         .ed-body{flex:1;min-height:0;overflow:auto;padding:16px 22px 22px;}
         .ed-h{color:var(--cyan,#00ffff);font-size:11px;font-weight:bold;letter-spacing:2px;
             text-transform:uppercase;margin:0 0 8px;}

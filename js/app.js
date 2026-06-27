@@ -43,26 +43,34 @@ async function addDestinationTree(baseUrl, parentGroup, groupColorRgb, parentNam
 
     if (files.length) {
         const ns = baseUrl.replace(/[^a-zA-Z0-9]/g, '-');  // unique per folder
-        const programs = [];
-        for (const f of files) {
-            const data = await fetchJSON(baseUrl + f.href);
-            if (data) programs.push(data);
-        }
-        programs.forEach((pgm, i) => {
-            // Namespace the id by folder so copies in different categories (e.g.
-            // Edit Suites duplicated from Encoders) don't collide on tab ids.
-            pgm.id = ns + '--' + pgm.id;
-            if (parentName) pgm.parentName = parentName;
-            pgm.color = DEST_TAB_COLORS[i % DEST_TAB_COLORS.length];
-            TopBar.addTab(pgm, { group: parentGroup, active: false, color: pgm.color });
+        // Build the tab straight from the manifest — no program JSON is fetched
+        // here. The file's contents (and its twists) load on first activation.
+        files.forEach((f, i) => {
+            const fileName = decodeURIComponent(f.href).replace(/\.json$/i, '');
+            const id = ns + '--' + fileName.replace(/[^a-zA-Z0-9]+/g, '-');
+            const color = DEST_TAB_COLORS[i % DEST_TAB_COLORS.length];
+            TopBar.addTab({ id, name: fileName.toUpperCase() }, {
+                group: parentGroup, active: false, color,
+                onActivate: async () => {
+                    const data = await fetchJSON(baseUrl + f.href);
+                    if (!data) return;
+                    data.id = id;                       // reuse the tab/pane id
+                    if (parentName) data.parentName = parentName;
+                    data.color = color;
+                    renderPrograms([data]);             // fills #tab-<id>
+                    if (typeof initializeTwists === 'function') initializeTwists();
+                    if (window.Editors && Editors.notifyRendered) Editors.notifyRendered();
+                },
+            });
         });
-        renderPrograms(programs);
     }
 
-    for (const dir of dirs) {
+    // Build the child groups from the manifest tree (cheap — just index.json),
+    // in parallel. Program content inside them stays lazy until a tab is opened.
+    await Promise.all(dirs.map(dir => {
         const sub = TopBar.addGroup(dir.name.toUpperCase(), { parent: parentGroup, color: groupColorRgb, collapsed: true });
-        await addDestinationTree(baseUrl + dir.href, sub, groupColorRgb, dir.name);
-    }
+        return addDestinationTree(baseUrl + dir.href, sub, groupColorRgb, dir.name);
+    }));
 }
 
 async function initApp() {
@@ -91,6 +99,10 @@ async function initApp() {
     initializeDraggables();
     initializeTwists();
     initSidebarResizer();
+
+    // Deep link: if the URL is #/<production>/<editor>, open that editor now that
+    // every twist exists in the DOM (e.g. /#/primary-prod-3/intercom).
+    if (window.Editors && Editors.openFromHash) Editors.openFromHash();
 }
 
 window.addEventListener('DOMContentLoaded', initApp);
