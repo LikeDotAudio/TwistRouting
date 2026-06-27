@@ -182,6 +182,10 @@ function initializeTwists() {
 }
 
 function openTwistModal(twistElement) {
+    // Role-specific twists (Video Mixer, Multi Viewer, Audio Mixer, Intercom, ISO)
+    // open their own full-screen editor; everything else uses the matrix below.
+    if (window.Editors && Editors.openForTwist(twistElement)) return;
+
     currentTwist = twistElement;
     const title = twistElement.querySelector('.twist-title').innerText;
     document.getElementById('modal-title').innerText = title + " // SWITCHER MATRIX";

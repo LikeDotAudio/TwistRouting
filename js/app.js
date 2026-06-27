@@ -144,6 +144,14 @@ async function initApp() {
     const audioSuper = document.getElementById('audio-super-pool-content');
     await renderMediaTree('Sources/Audio/', audioSuper, 'audio', 0, null);
 
+    // Playouts: each file is a playout of 4 players × 4 videos, every video a
+    // stack of one video + four audio feeds. Discovered from Playout/index.json.
+    const playouts = await loadProgramFolder('Sources/Playout/');
+    const playoutSuper = document.getElementById('playout-super-pool-content');
+    if (typeof renderPlayoutPool === 'function') {
+        playouts.forEach(p => renderPlayoutPool(p, playoutSuper));
+    }
+
     initializeDraggables();
     initializeTwists();
     initSidebarResizer();

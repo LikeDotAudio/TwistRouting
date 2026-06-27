@@ -35,6 +35,8 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             height: 100vh;
+            height: 100dvh; /* dvh tracks the *visible* viewport so the footer
+                               isn't pushed under a tablet/mobile browser's toolbars */
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -46,7 +48,7 @@
             grid-template-columns: var(--sidebar-width, 250px) 6px 1fr;
             gap: 8px;
             flex: 1;
-            padding: 20px;
+            padding: 0; /* elbows run flush to the top and both edges — no wasted gutter */
             min-height: 0;
         }
 
@@ -110,7 +112,9 @@
             bottom: 0;
             width: 45px;
             background: var(--prod-color, #ffaa00);
-            border-radius: 0 0 30px 30px; /* rounded foot at the bottom */
+            /* Rounded on the OUTSIDE (top-right + bottom foot), square on the
+               INSIDE (top-left) where it meets the content. */
+            border-radius: 0 30px 30px 30px;
             z-index: 0;
             pointer-events: none;
         }
@@ -132,7 +136,9 @@
             padding: 8px 26px;
             margin-bottom: 14px;
             background: var(--prod-color, #ffaa00);
-            border-radius: 14px 0 0 14px; /* rounded left end, square right to meet the spine */
+            /* Rounded left end, and rounded outer top-right so it caps the spine
+               into a single LCARS elbow; bottom-right stays square (inner edge). */
+            border-radius: 14px 30px 0 14px;
         }
 
         /* Credit pill pinned to the bottom-right corner. */
@@ -811,7 +817,10 @@
         .audio-super-pool {
             --lcars-color: #FF9C63; /* Orange */
         }
-        
+        .playout-super-pool {
+            --lcars-color: #646DCC; /* Indigo */
+        }
+
         .super-pool-title {
             position: absolute;
             top: 6px;
@@ -916,7 +925,10 @@
             .sidebar-sash {
                 display: none;
             }
-            .panel {
+            /* Cap only the SOURCES sidebar so it doesn't eat the screen; the main
+               content panel fills the remaining 1fr row (capping it too left a huge
+               empty gap above the footer when a short room/floor was selected). */
+            .ingress-panel {
                 max-height: 40vh;
             }
             .input-grid-video, .input-grid-audio {
@@ -952,11 +964,19 @@
                 <div class="super-pool-content" id="productions-super-pool-content">
                 </div>
             </div>
+
+            <div class="super-pool-container playout-super-pool" onclick="toggleSuperPool(event, this)">
+                <div class="super-pool-title foldable-header">
+                    <span>PLAYOUT</span><span class="fold-icon">▼</span>
+                </div>
+                <div class="super-pool-content" id="playout-super-pool-content">
+                </div>
+            </div>
         </div>
 
         <div class="sidebar-sash" id="sidebar-sash" title="Drag to resize the sources sidebar"></div>
 
-        <div class="panel" style="overflow: hidden; display: flex; flex-direction: column; border: none; border-radius: 0; padding: 10px;">
+        <div class="panel" style="overflow: hidden; display: flex; flex-direction: column; border: none; border-radius: 0; padding: 10px 0;">
             <div id="production-content" style="flex: 1 1 auto; min-height: 0; overflow-y: auto;">
                 <!-- Tab contents injected here -->
             </div>
@@ -984,14 +1004,16 @@
 
     <a class="credit-button" href="https://like.audio/20260627/twist-like-audio/" target="_blank" rel="noopener">CREATED BY ANTHONY PETER KUZUB&nbsp;&nbsp;-&nbsp;&nbsp;WWW.LIKE.AUDIO</a>
 
-    <script src="js/globals.js?v=40"></script>
-    <script src="js/poolVideo.js?v=40"></script>
-    <script src="js/poolAudio.js?v=40"></script>
-    <script src="js/visuals.js?v=40"></script>
-    <script src="js/matrix.js?v=40"></script>
-    <script src="js/dragDrop.js?v=40"></script>
-    <script src="js/productions.js?v=40"></script>
-    <script src="js/topbar.js?v=40"></script>
-    <script src="js/app.js?v=40"></script>
+    <script src="js/globals.js?v=41"></script>
+    <script src="js/poolVideo.js?v=41"></script>
+    <script src="js/poolAudio.js?v=41"></script>
+    <script src="js/visuals.js?v=41"></script>
+    <script src="js/matrix.js?v=41"></script>
+    <script src="js/editors.js?v=41"></script>
+    <script src="js/dragDrop.js?v=41"></script>
+    <script src="js/productions.js?v=41"></script>
+    <script src="js/poolPlayout.js?v=41"></script>
+    <script src="js/topbar.js?v=41"></script>
+    <script src="js/app.js?v=41"></script>
 </body>
 </html>

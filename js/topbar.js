@@ -136,6 +136,29 @@
     let tabIndex = 0;
     let groups = [];
 
+    // ===== Auto-fold: roll up every destination group after a spell of
+    // inactivity, so the footer tidies itself when left alone. Any pointer/key/
+    // scroll activity re-arms the timer. =====
+    const IDLE_MS = 10000;
+    let idleTimer = null;
+    let idleBound = false;
+
+    function collapseAllGroups() {
+        groups.forEach(g => g.group.classList.add('collapsed'));
+    }
+
+    function resetIdleTimer() {
+        if (idleTimer) clearTimeout(idleTimer);
+        idleTimer = setTimeout(collapseAllGroups, IDLE_MS);
+    }
+
+    function bindIdleWatchers() {
+        if (idleBound) return;
+        idleBound = true;
+        ['mousedown', 'mousemove', 'keydown', 'touchstart', 'wheel', 'scroll']
+            .forEach(evt => window.addEventListener(evt, resetIdleTimer, { passive: true }));
+    }
+
     // Toggle a group open/closed. Among siblings (same parent) it acts as an
     // accordion — opening one rolls up the others at that level only.
     function toggleGroup(target) {
@@ -161,6 +184,8 @@
             contentContainer.innerHTML = '';
             tabIndex = 0;
             groups = [];
+            bindIdleWatchers();
+            resetIdleTimer();
         },
 
         // Create an LCARS group container with a coloured label.
@@ -214,7 +239,13 @@
             tab.className = 'lcars-tab' + (active ? ' active' : '');
             tab.style.setProperty('--lcars', color);
             tab.innerText = pgm.name;
-            tab.onclick = (e) => switchTab(pgm.id, e);
+            tab.onclick = (e) => {
+                switchTab(pgm.id, e);
+                // A genuine user pick tucks the whole destination nav away. Guard on
+                // isTrusted so the programmatic auto-select fired when a group is
+                // first expanded (toggleGroup) doesn't collapse it right back.
+                if (e.isTrusted) collapseAllGroups();
+            };
             host.appendChild(tab);
 
             const cont = document.createElement('div');
