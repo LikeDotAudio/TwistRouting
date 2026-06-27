@@ -6,5 +6,6 @@
   "extraClass": "video-st1",
   "color": "#C2B74B",
   "floor": "5th Floor",
-  "level": 500
+  "level": 500,
+  "status": "OK"
 }

@@ -3,5 +3,6 @@
   "name": "REMOTES",
   "prefix": "REM-",
   "count": 8,
-  "extraClass": "video-remote"
+  "extraClass": "video-remote",
+  "status": "OK"
 }

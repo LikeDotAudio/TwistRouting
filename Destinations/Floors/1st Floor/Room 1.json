@@ -57,5 +57,6 @@
       "accepts": "audio",
       "row": "foldback"
     }
-  ]
+  ],
+  "status": "OFFLINE"
 }

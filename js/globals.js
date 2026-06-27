@@ -1,4 +1,10 @@
 const selectedPoolNodes = new Set();
+
+// A signal/device is faulted when its status is set and isn't "OK". Faulted
+// items pulse red, and routing one corrupts the destination's DNA strand.
+function isFaultStatus(status) {
+    return !!status && String(status).toUpperCase() !== 'OK';
+}
 let lastClickedNode = null;
 let currentTwist = null;
 let matrixDragSrcEl = null;

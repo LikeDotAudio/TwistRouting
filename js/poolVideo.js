@@ -15,11 +15,12 @@ function styleVideoNode(node, color) {
     node.style.boxShadow = `0 0 5px ${color}55`;
 }
 
-function populateVideoPool(poolId, prefix, count, extraClass, color) {
+function populateVideoPool(poolId, prefix, count, extraClass, color, status) {
     const pool = document.getElementById(poolId);
     if (!pool) return;
     pool.innerHTML = '';
     const poolColor = color || '#CC99CC';
+    const faulted = isFaultStatus(status);
     for (let i = 1; i <= count; i++) {
         const id = prefix + i.toString().padStart(2, '0');
         const node = document.createElement('div');
@@ -42,21 +43,34 @@ function populateVideoPool(poolId, prefix, count, extraClass, color) {
         node.style.borderColor = shadeColor(poolColor, ((i % 4) * 14) - 21);
         const vSub = node.querySelector(`#pool-${id}-V`);
         if (vSub) styleVideoNode(vSub, poolColor);
+        // Propagate fault status to the box and every feed inside it.
+        node.dataset.status = status || 'OK';
+        if (faulted) {
+            node.classList.add('fault');
+            node.querySelectorAll('.sub-stream').forEach(sub => {
+                sub.dataset.status = status;
+                sub.classList.add('fault');
+            });
+        } else {
+            node.querySelectorAll('.sub-stream').forEach(sub => { sub.dataset.status = 'OK'; });
+        }
         pool.appendChild(node);
     }
 }
 
 function renderVideoPool(data, container) {
+    const faulted = isFaultStatus(data.status);
+    const faultTag = faulted ? `<span class="fault-tag">⚠ ${data.status}</span>` : '';
     const group = document.createElement('div');
     group.className = 'input-group';
     group.innerHTML = `
-        <div class="foldable-header" style="--lcars-color: ${data.color || 'var(--lcars-color)'}; font-size: 11px; margin-bottom: 8px;" onclick="togglePool(this)">
-            <span>${data.name}</span>
+        <div class="foldable-header${faulted ? ' fault' : ''}" title="${data.status || 'OK'}" style="--lcars-color: ${data.color || 'var(--lcars-color)'}; font-size: 11px; margin-bottom: 8px;" onclick="togglePool(this)">
+            <span>${data.name}${faultTag}</span>
             <span class="fold-icon" style="transform: rotate(-90deg); display: inline-block; transition: transform 0.2s;">▼</span>
         </div>
         <div class="input-grid-video pool-content" id="${data.id}" style="display: none;">
         </div>
     `;
     container.appendChild(group);
-    populateVideoPool(data.id, data.prefix, data.count, data.extraClass, data.color);
+    populateVideoPool(data.id, data.prefix, data.count, data.extraClass, data.color, data.status);
 }

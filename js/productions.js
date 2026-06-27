@@ -55,10 +55,13 @@ function renderPrograms(programs) {
         const titleText = pgm.parentName
             ? `${pgm.parentName.toUpperCase()} — ${pgm.name}`
             : pgm.name;
+        // An offline/faulted room pulses red and flags its status in the title.
+        const faulted = isFaultStatus(pgm.status);
+        const faultTag = faulted ? ` <span class="fault-tag">⚠ ${pgm.status}</span>` : '';
 
         let html = `
-            <div class="program-row" style="--prod-color: ${pgm.color || '#ffaa00'}; position: relative; overflow: hidden; padding: 0; margin-bottom: 10px; flex: 1 1 auto;">
-                <div class="program-title" style="background: ${pgm.color || '#ffaa00'};">${titleText}</div>
+            <div class="program-row${faulted ? ' fault' : ''}" style="--prod-color: ${pgm.color || '#ffaa00'}; position: relative; overflow: hidden; padding: 0; margin-bottom: 10px; flex: 1 1 auto;">
+                <div class="program-title" style="background: ${pgm.color || '#ffaa00'};">${titleText}${faultTag}</div>
                 <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding-right: 60px;">
         `;
         

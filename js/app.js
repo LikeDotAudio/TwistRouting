@@ -11,7 +11,9 @@ function makeMediaGroup(container, title, color, depth) {
 
     const content = document.createElement('div');
     content.className = 'media-group-content';
-    content.style.cssText = `display:none; margin-left:${depth * 10}px;`;
+    // A vertical bar in the group's colour runs down the left of the children
+    // (which are pushed to the right), showing they belong to this group.
+    content.style.cssText = `display:none; margin-left:${depth * 10 + 6}px; padding-left:12px; border-left:3px solid ${color}; border-radius:0 0 0 6px;`;
 
     // Self-contained toggle (not the pool accordion) so nested folders fold
     // independently of the stage-box pools inside them.

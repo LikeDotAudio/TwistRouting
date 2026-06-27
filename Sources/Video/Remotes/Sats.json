@@ -3,5 +3,6 @@
   "name": "SATS",
   "prefix": "SAT-",
   "count": 8,
-  "extraClass": "video-aux"
+  "extraClass": "video-aux",
+  "status": "OK"
 }

@@ -19,10 +19,16 @@ function styleAudioNode(node, color) {
     node.style.boxShadow = `0 0 5px ${color}55`;
 }
 
-function populateAudioPool(poolId, prefix, count, extraClass, items, color) {
+function populateAudioPool(poolId, prefix, count, extraClass, items, color, status) {
     const poolGrid = document.getElementById(poolId);
     if (!poolGrid) return;
     poolGrid.innerHTML = '';
+    const faulted = isFaultStatus(status);
+
+    const tagNode = (node) => {
+        node.dataset.status = status || 'OK';
+        if (faulted) node.classList.add('fault');
+    };
 
     if (items && items.length > 0) {
         items.forEach((item) => {
@@ -34,6 +40,7 @@ function populateAudioPool(poolId, prefix, count, extraClass, items, color) {
             node.id = 'pool-' + poolId + '-' + item.replace(/[^a-zA-Z0-9]/g, '-');
             node.style.animationDelay = `${Math.random() * 2}s`;
             if (color) styleAudioNode(node, color);
+            tagNode(node);
             poolGrid.appendChild(node);
         });
     } else {
@@ -45,6 +52,7 @@ function populateAudioPool(poolId, prefix, count, extraClass, items, color) {
             node.id = 'pool-' + prefix + num;
             node.style.animationDelay = `${Math.random() * 2}s`;
             if (color) styleAudioNode(node, color);
+            tagNode(node);
             poolGrid.appendChild(node);
         }
     }
@@ -52,16 +60,18 @@ function populateAudioPool(poolId, prefix, count, extraClass, items, color) {
 
 function renderAudioPool(data, container, color) {
     const poolColor = color || data.color || '#00ffff';
+    const faulted = isFaultStatus(data.status);
+    const faultTag = faulted ? `<span class="fault-tag">⚠ ${data.status}</span>` : '';
     const group = document.createElement('div');
     group.className = 'input-group';
     group.innerHTML = `
-        <div class="foldable-header" style="--lcars-color: ${poolColor}; background-color: ${poolColor}; font-size: 11px; margin-bottom: 8px;" onclick="togglePool(this)">
-            <span>${data.name}</span>
+        <div class="foldable-header${faulted ? ' fault' : ''}" title="${data.status || 'OK'}" style="--lcars-color: ${poolColor}; background-color: ${poolColor}; font-size: 11px; margin-bottom: 8px;" onclick="togglePool(this)">
+            <span>${data.name}${faultTag}</span>
             <span class="fold-icon" style="transform: rotate(-90deg); display: inline-block; transition: transform 0.2s;">▼</span>
         </div>
         <div class="input-grid-audio pool-content" id="${data.id}" style="display: none;">
         </div>
     `;
     container.appendChild(group);
-    populateAudioPool(data.id, data.prefix, data.count, data.extraClass, data.items, poolColor);
+    populateAudioPool(data.id, data.prefix, data.count, data.extraClass, data.items, poolColor, data.status);
 }

@@ -6,5 +6,6 @@
   "extraClass": "video-st1",
   "color": "#FF9C00",
   "floor": "1st Floor",
-  "level": 100
+  "level": 100,
+  "status": "NO CONNECTION"
 }

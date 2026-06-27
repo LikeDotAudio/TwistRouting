@@ -123,10 +123,13 @@ function updateTwistVisuals(twist) {
 
         svg.setAttribute('viewBox', `0 0 ${width} 100`);
 
+        // If any routed source is faulted, the strand goes red and "corrupted".
+        const corrupted = Array.from(swimmers).some(s => isFaultStatus(s.dataset.status));
+        twist.classList.toggle('corrupted', corrupted);
+
         let sourceColors = [];
         swimmers.forEach(s => {
-            const compColor = window.getComputedStyle(s).color;
-            sourceColors.push(compColor);
+            sourceColors.push(corrupted ? '#ff3b3b' : window.getComputedStyle(s).color);
         });
 
         svg.innerHTML = getDNAHtml(cycles, width, sourceColors);
