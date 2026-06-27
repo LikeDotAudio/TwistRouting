@@ -1,7 +1,16 @@
-// Orange-family LCARS shades so audio pools stay distinguishable while reading as "orange".
+// Distinct LCARS shades mixing the ST:VIII(FC) and ST:X(NEM) palettes so each
+// audio pool is strongly differentiated from the next.
 const AUDIO_POOL_COLORS = [
-    '#FF9C00', '#F7BD5A', '#FFCC99', '#ED864C',
-    '#F5AD00', '#FF9C63', '#C67825', '#DFAF71'
+    '#FF9C00', // amber
+    '#3786FF', // azure
+    '#87EEFF', // cyan
+    '#D45F10', // deep orange
+    '#A89B35', // olive
+    '#97587B', // plum
+    '#46616E', // slate
+    '#C19880', // mauve
+    '#C2B74B', // gold
+    '#0A46EE'  // deep blue
 ];
 
 function styleAudioNode(node, color) {
@@ -44,7 +53,7 @@ function renderAudioPool(data, container, color) {
     const group = document.createElement('div');
     group.className = 'input-group';
     group.innerHTML = `
-        <div class="foldable-header" style="font-size: 11px; margin-bottom: 8px; color: ${poolColor}; text-shadow: 0 0 5px ${poolColor}55;" onclick="togglePool(this)">
+        <div class="foldable-header" style="--lcars-color: ${poolColor}; background-color: ${poolColor}; font-size: 11px; margin-bottom: 8px;" onclick="togglePool(this)">
             <span>${data.name}</span>
             <span class="fold-icon" style="transform: rotate(-90deg); display: inline-block; transition: transform 0.2s;">▼</span>
         </div>

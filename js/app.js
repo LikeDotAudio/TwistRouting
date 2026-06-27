@@ -62,11 +62,17 @@ async function initApp() {
             masterPrograms.push(data);
         }
     }
-    const masterGroup = TopBar.addGroup('MASTER', { color: '255,51,102' });
+    const masterGroup = TopBar.addGroup('MASTER', { color: '255,51,102', collapsed: true });
     masterPrograms.forEach((pgm) => {
         TopBar.addTab(pgm, { group: masterGroup, active: false });
     });
     renderPrograms(masterPrograms);
+
+    // PROGRAM OUTPUTS (the productions super-pool) is only useful when routing a
+    // master/encoder, so it stays hidden until a master tab is selected.
+    window.masterTabIds = new Set(masterPrograms.map(p => p.id));
+    const prodPool = document.querySelector('.productions-super-pool');
+    if (prodPool) prodPool.style.display = 'none';
 
     initializeDraggables();
     initializeTwists();

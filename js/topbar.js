@@ -42,6 +42,9 @@
                 background: rgba(var(--group-lcars), 0.08);
             }
             .lcars-group-label {
+                display: flex;
+                align-items: center;
+                gap: 8px;
                 font-weight: 900;
                 letter-spacing: 2px;
                 text-transform: uppercase;
@@ -53,6 +56,17 @@
                 /* Asymmetric LCARS pill */
                 border-radius: 16px 4px 4px 16px;
                 white-space: nowrap;
+                cursor: pointer;
+            }
+            .lcars-group-caret {
+                font-size: 10px;
+                transition: transform 0.2s;
+            }
+            .lcars-group:not(.collapsed) .lcars-group-caret {
+                transform: rotate(90deg);
+            }
+            .lcars-group.collapsed .lcars-group-tabs {
+                display: none;
             }
             .lcars-group-tabs {
                 display: flex;
@@ -95,6 +109,17 @@
     let tabsContainer = null;
     let contentContainer = null;
     let tabIndex = 0;
+    let groups = [];
+
+    // Expand one group and roll up (collapse) all the others — an accordion.
+    function expandGroup(target) {
+        groups.forEach(g => g.group.classList.toggle('collapsed', g !== target));
+        // If the newly-expanded group has no active tab, select its first one.
+        if (!target.tabsEl.querySelector('.lcars-tab.active')) {
+            const first = target.tabsEl.querySelector('.lcars-tab');
+            if (first) first.click();
+        }
+    }
 
     const TopBar = {
         // Bind the bar to its containers and reset state. Call once per render.
@@ -106,29 +131,35 @@
             tabsContainer.innerHTML = '';
             contentContainer.innerHTML = '';
             tabIndex = 0;
+            groups = [];
         },
 
         // Create an LCARS group container with a coloured label.
-        // opts.color is an "r,g,b" string. Returns a group handle for addTab().
+        // opts.color is an "r,g,b" string. opts.collapsed folds it by default.
+        // The label toggles the accordion. Returns a group handle for addTab().
         addGroup(label, opts = {}) {
             if (!tabsContainer) return null;
             const color = opts.color || '255,170,0';
 
             const group = document.createElement('div');
-            group.className = 'lcars-group';
+            group.className = 'lcars-group' + (opts.collapsed ? ' collapsed' : '');
             group.style.setProperty('--group-lcars', color);
 
             const labelEl = document.createElement('div');
             labelEl.className = 'lcars-group-label';
-            labelEl.innerText = label;
+            labelEl.innerHTML = `<span>${label}</span><span class="lcars-group-caret">▸</span>`;
             group.appendChild(labelEl);
 
             const tabsEl = document.createElement('div');
             tabsEl.className = 'lcars-group-tabs';
             group.appendChild(tabsEl);
 
+            const handle = { group, tabsEl, labelEl };
+            labelEl.addEventListener('click', () => expandGroup(handle));
+            groups.push(handle);
+
             tabsContainer.appendChild(group);
-            return { tabsEl };
+            return handle;
         },
 
         // Add a tab for a program/encoder. Creates the matching tab-content

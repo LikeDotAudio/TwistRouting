@@ -2,7 +2,14 @@
   "id": "enc1",
   "name": "ENCODER 1",
   "twists": [
-    { "name": "Video Destination", "accepts": "video" },
-    { "name": "Audio Destination", "accepts": "audio" }
+    {
+      "name": "Video Destination",
+      "accepts": "video",
+      "maxVideo": 1
+    },
+    {
+      "name": "Audio Destination",
+      "accepts": "audio"
+    }
   ]
 }

@@ -38,21 +38,6 @@
             background-image: radial-gradient(circle at 50% 50%, #1a2a4c 0%, #050a15 80%);
         }
 
-        header {
-            padding: 20px;
-            text-align: center;
-            border-bottom: 2px solid var(--cyan);
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
-            background: linear-gradient(90deg, rgba(0,255,255,0) 0%, rgba(0,255,255,0.1) 50%, rgba(0,255,255,0) 100%);
-        }
-
-        header h1 {
-            font-size: 24px;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            text-shadow: var(--glow-cyan);
-        }
-
         .container {
             display: grid;
             grid-template-columns: 250px 1fr;
@@ -60,6 +45,26 @@
             flex: 1;
             padding: 20px;
             min-height: 0;
+        }
+
+        /* Tab strip pinned to the bottom of the viewport as a footer */
+        .app-footer {
+            position: relative;
+            flex: 0 0 auto;
+            background: var(--panel-bg);
+            padding: 20px 16px 6px;
+            overflow-x: auto;
+        }
+        /* LCARS accent rail above the tabs: rises on the left, sweeps right */
+        .app-footer::before {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 16px;
+            right: 16px;
+            height: 10px;
+            background: var(--program-color, #646DCC);
+            border-radius: 12px 12px 0 0;
         }
 
         .panel {
@@ -89,29 +94,39 @@
             box-shadow: 0 0 5px rgba(100, 109, 204, 0.4);
         }
 
-        /* LCARS L-bar down the RIGHT side of each production, in the production
-           colour: a tall right spine with a foot at the bottom, behind the twists. */
+        /* LCARS right spine: a vertical bar down the right edge that connects
+           up into the production title rail to form a top+right frame. */
         .program-row::after {
             content: '';
             position: absolute;
-            top: 48px;            /* clear the production title */
+            top: 0;
             right: 0;
             bottom: 0;
-            width: 200px;
-            border-right: 45px solid var(--prod-color, #ffaa00);
-            border-bottom: 35px solid var(--prod-color, #ffaa00);
-            border-top-right-radius: 30px;
-            border-bottom-right-radius: 30px;
-            border-bottom-left-radius: 30px;
-            box-sizing: border-box;
-            opacity: 0.85;
+            width: 45px;
+            background: var(--prod-color, #ffaa00);
+            border-radius: 0 0 30px 30px; /* rounded foot at the bottom */
             z-index: 0;
             pointer-events: none;
         }
-        /* Keep the production's contents above the L-bar */
+        /* Keep the production's contents above the spine */
         .program-row > * {
             position: relative;
             z-index: 1;
+        }
+
+        /* LCARS top rail holding the production name: spans the full width and
+           butts flush into the right spine, rounded on the LEFT (mirrored). */
+        .program-title {
+            display: block;
+            width: 100%;
+            color: #000;
+            font-weight: bold;
+            font-size: 16px;
+            letter-spacing: 2px;
+            padding: 8px 26px;
+            margin-bottom: 14px;
+            background: var(--prod-color, #ffaa00);
+            border-radius: 14px 0 0 14px; /* rounded left end, square right to meet the spine */
         }
 
         .panel-title {
@@ -214,8 +229,8 @@
 
         .twist-container {
             width: 45%;
-            min-height: 200px;
-            padding: 30px 10px 10px 55px; /* Leave room for LCARS borders */
+            min-height: 0; /* Stays compact until sources are patched in */
+            padding: 24px 10px 6px 55px; /* Leave room for LCARS borders */
             background: transparent;
             border: none;
             border-radius: 0;
@@ -259,15 +274,58 @@
             opacity: 0.9;
         }
 
+        /* A row of 3 small monitors, each ~1/3 of a full twist's width */
+        .monitor-row {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            flex-wrap: nowrap;
+        }
+        .twist-container.monitor-twist {
+            padding: 18px 6px 6px 34px; /* smaller left bar */
+        }
+        .twist-container.monitor-twist::before {
+            border-left-width: 26px;
+            border-top-width: 14px;
+            border-top-left-radius: 16px;
+            border-bottom-left-radius: 16px;
+        }
+        .twist-container.monitor-twist::after {
+            left: 64px;
+            height: 14px;
+        }
+        .twist-container.monitor-twist .twist-title {
+            left: 70px;
+            top: 1px;
+            font-size: 10px;
+            letter-spacing: 1px;
+        }
+        .twist-container.monitor-twist .twist-stats {
+            top: 2px;
+            font-size: 8px;
+        }
+
         .twist-title {
             position: absolute;
             top: 3px;
-            right: 15px;
+            left: 120px;            /* left end of the top rail, beside the gap */
             font-size: 13px;
             font-weight: bold;
             color: #000 !important;
             letter-spacing: 2px;
             text-transform: uppercase;
+            z-index: 2;
+        }
+
+        /* Source summary sits on the right end of the LCARS top rail */
+        .twist-stats {
+            position: absolute;
+            top: 5px;
+            right: 15px;
+            font-size: 10px;
+            font-weight: bold;
+            color: #000;
+            letter-spacing: 1px;
             z-index: 2;
         }
 
@@ -602,8 +660,6 @@
         }
         .tab-content {
             display: none;
-            height: calc(100% - 60px);
-            overflow-y: auto;
         }
         .add-swimmer-btn {
             background: rgba(255,255,255,0.1);
@@ -655,7 +711,7 @@
     <div class="container">
         <div class="panel ingress-panel">
             <div class="super-pool-container productions-super-pool" onclick="toggleSuperPool(event, this)">
-                <div class="super-pool-title foldable-header" style="color: #7CFC00; border-bottom-color: #7CFC00;">
+                <div class="super-pool-title foldable-header">
                     <span>PRODUCTIONS</span><span class="fold-icon">▼</span>
                 </div>
                 <div class="super-pool-content" id="productions-super-pool-content">
@@ -663,31 +719,34 @@
             </div>
 
             <div class="super-pool-container video-super-pool" onclick="toggleSuperPool(event, this)">
-                <div class="super-pool-title foldable-header" style="color: var(--magenta); border-bottom-color: var(--magenta);">
-                    <span>VIDEO POOLS</span><span class="fold-icon">▼</span>
+                <div class="super-pool-title foldable-header">
+                    <span>VIDEO</span><span class="fold-icon">▼</span>
                 </div>
                 <div class="super-pool-content" id="video-super-pool-content">
                 </div>
             </div>
 
             <div class="super-pool-container audio-super-pool" onclick="toggleSuperPool(event, this)">
-                <div class="super-pool-title foldable-header" style="color: var(--cyan); border-bottom-color: var(--cyan);">
-                    <span>AUDIO POOLS</span><span class="fold-icon">▼</span>
+                <div class="super-pool-title foldable-header">
+                    <span>AUDIO</span><span class="fold-icon">▼</span>
                 </div>
                 <div class="super-pool-content" id="audio-super-pool-content">
                 </div>
             </div>
         </div>
 
-        <div class="panel" style="overflow: hidden;">
-            <div id="production-tabs" class="tabs-header">
-                <!-- Tabs injected here -->
-            </div>
-            <div id="production-content" style="height: calc(100% - 60px);">
+        <div class="panel" style="overflow: hidden; display: flex; flex-direction: column; border: none; border-radius: 0; padding: 10px;">
+            <div id="production-content" style="flex: 1 1 auto; min-height: 0; overflow-y: auto;">
                 <!-- Tab contents injected here -->
             </div>
         </div>
     </div>
+
+    <footer class="app-footer">
+        <div id="production-tabs" class="tabs-header">
+            <!-- Tabs injected here -->
+        </div>
+    </footer>
 
     <div id="twist-modal" class="modal-overlay">
         <div class="modal-content">
@@ -702,14 +761,14 @@
         </div>
     </div>
 
-    <script src="js/globals.js?v=10"></script>
-    <script src="js/poolVideo.js?v=10"></script>
-    <script src="js/poolAudio.js?v=10"></script>
-    <script src="js/visuals.js?v=10"></script>
-    <script src="js/matrix.js?v=10"></script>
-    <script src="js/dragDrop.js?v=10"></script>
-    <script src="js/productions.js?v=10"></script>
-    <script src="js/topbar.js?v=10"></script>
-    <script src="js/app.js?v=10"></script>
+    <script src="js/globals.js?v=21"></script>
+    <script src="js/poolVideo.js?v=21"></script>
+    <script src="js/poolAudio.js?v=21"></script>
+    <script src="js/visuals.js?v=21"></script>
+    <script src="js/matrix.js?v=21"></script>
+    <script src="js/dragDrop.js?v=21"></script>
+    <script src="js/productions.js?v=21"></script>
+    <script src="js/topbar.js?v=21"></script>
+    <script src="js/app.js?v=21"></script>
 </body>
 </html>

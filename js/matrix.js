@@ -50,6 +50,17 @@ function initializeTwists() {
                 twist.appendChild(dropZone);
             }
             
+            // Append while enforcing an optional per-twist video cap
+            // (e.g. encoders accept only 1 video source — a new one replaces it).
+            function appendWithLimit(child) {
+                if (config && config.maxVideo && child.classList.contains('video')) {
+                    const existingVideo = dropZone.querySelectorAll('.signal-node.video');
+                    const removeCount = existingVideo.length - (config.maxVideo - 1);
+                    for (let k = 0; k < removeCount; k++) existingVideo[k].remove();
+                }
+                dropZone.appendChild(child);
+            }
+
             ids.forEach(id => {
                 const node = document.getElementById(id);
                 if (node) {
@@ -67,7 +78,7 @@ function initializeTwists() {
                                 subClone.classList.remove('selected');
                                 subClone.style.opacity = '1';
                                 subClone.draggable = false;
-                                dropZone.appendChild(subClone);
+                                appendWithLimit(subClone);
                             });
                         } else {
                             if (config && config.accepts) {
@@ -79,14 +90,14 @@ function initializeTwists() {
                             clone.classList.remove('selected');
                             clone.style.opacity = '1';
                             clone.draggable = false;
-                            dropZone.appendChild(clone);
+                            appendWithLimit(clone);
                         }
                     } else {
                         if (config && config.accepts) {
                             if (config.accepts === 'video' && !node.classList.contains('video')) return;
                             if (config.accepts === 'audio' && !node.classList.contains('audio')) return;
                         }
-                        dropZone.appendChild(node);
+                        appendWithLimit(node);
                     }
                 }
             });

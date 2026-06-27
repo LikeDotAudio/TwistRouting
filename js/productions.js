@@ -41,34 +41,46 @@ function renderPrograms(programs) {
         if (!container) return;
         
         let html = `
-            <div class="program-row" style="--prod-color: ${pgm.color || '#ffaa00'}; position: relative; overflow: hidden; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 20px; margin-bottom: 20px; height: 100%;">
-                <div style="font-size: 16px; font-weight: bold; color: ${pgm.color}; margin-bottom: 20px; letter-spacing: 2px;">${pgm.name}</div>
-                <div style="display: flex; flex-direction: column; gap: 30px; padding-bottom: 15px; overflow-y: auto; align-items: flex-start;">
+            <div class="program-row" style="--prod-color: ${pgm.color || '#ffaa00'}; position: relative; overflow: hidden; padding: 0; margin-bottom: 10px;">
+                <div class="program-title" style="background: ${pgm.color || '#ffaa00'};">${pgm.name}</div>
+                <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
         `;
         
+        let monitorsHtml = '';
         pgmTwists.forEach(twistObj => {
             let twistName = twistObj;
             let twistConfig = '';
             let lcarsColor = pgm.color || '#ffaa00';
-            
+            let isMonitor = false;
+
             if (typeof twistObj === 'object') {
                 twistName = twistObj.name;
                 twistConfig = `data-config='${JSON.stringify(twistObj).replace(/'/g, "&#39;")}'`;
                 if (twistObj.accepts === 'video') lcarsColor = '#CC99CC';
                 if (twistObj.accepts === 'audio') lcarsColor = '#FF9C63';
+                if (twistObj.accepts === 'both') lcarsColor = '#CC99CC';
+                isMonitor = !!twistObj.monitor;
             }
 
-            html += `
-                    <div class="twist-container" ${twistConfig} style="--lcars-color: ${lcarsColor}; flex: 0 0 auto; min-width: 200px;">
+            const sizing = isMonitor ? 'flex: 1 1 0; min-width: 0;' : 'flex: 0 0 auto; min-width: 200px;';
+            const twistHtml = `
+                    <div class="twist-container${isMonitor ? ' monitor-twist' : ''}" ${twistConfig} style="--lcars-color: ${lcarsColor}; ${sizing}">
                         <div class="twist-title">${twistName}</div>
                         <div class="matrix-container" id="${pgm.id}-${twistName.replace(/\s+/g, '-').toLowerCase()}">
-                            <div style="color: rgba(255,255,255,0.5); text-align: center; margin-top: 50px;">NO SWIMMERS ASSIGNED TO THIS GENE.</div>
+                            <div style="color: rgba(255,255,255,0.5); text-align: center;">NO SWIMMERS ASSIGNED TO THIS GENE.</div>
                         </div>
-                        <svg class="dna-helix" viewBox="0 0 100 100" preserveAspectRatio="none" style="width: 100%; height: 100px; display: block; margin-top: 10px;"></svg>
+                        <svg class="dna-helix" viewBox="0 0 100 100" preserveAspectRatio="none" style="width: 100%; height: 0; display: block; margin-top: 0;"></svg>
                     </div>
             `;
+            if (isMonitor) monitorsHtml += twistHtml;
+            else html += twistHtml;
         });
-        
+
+        // The small monitors sit together in one row, each ~1/3 width.
+        if (monitorsHtml) {
+            html += `<div class="monitor-row">${monitorsHtml}</div>`;
+        }
+
         html += `
                 </div>
             </div>

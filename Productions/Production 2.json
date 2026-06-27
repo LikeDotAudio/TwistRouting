@@ -19,7 +19,7 @@
     },
     {
       "name": "Multi Viewer",
-      "accepts": "video",
+      "accepts": "both",
       "inputs": [
         "MV 1",
         "MV 2",
@@ -56,6 +56,24 @@
         "ICOM 3",
         "ICOM 4"
       ]
+    },
+    {
+      "name": "Monitor 1",
+      "accepts": "video",
+      "maxVideo": 1,
+      "monitor": true
+    },
+    {
+      "name": "Monitor 2",
+      "accepts": "video",
+      "maxVideo": 1,
+      "monitor": true
+    },
+    {
+      "name": "Monitor 3",
+      "accepts": "video",
+      "maxVideo": 1,
+      "monitor": true
     }
   ]
 }

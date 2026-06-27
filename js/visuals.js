@@ -69,37 +69,58 @@ function updateTwistVisuals(twist) {
     if (!statsEl) {
         statsEl = document.createElement('div');
         statsEl.className = 'twist-stats';
-        statsEl.style.fontSize = '10px';
-        statsEl.style.color = 'rgba(0, 255, 255, 0.8)';
-        statsEl.style.marginTop = '5px';
-        statsEl.style.marginBottom = '5px';
-        statsEl.style.letterSpacing = '1px';
         twist.querySelector('.twist-title').after(statsEl);
     }
-    statsEl.innerText = `SOURCES: ${totalCount} [V:${videoCount} | A:${audioCount}]`;
-    
-    const cycles = Math.max(1, totalCount);
-    const cycleWidth = 60;
-    const width = 20 + cycles * cycleWidth;
-    
-    twist.style.minWidth = `${Math.max(200, width + 40)}px`;
-    
+    // Only show a summary once sources exist; styling/position come from CSS.
+    statsEl.innerText = totalCount > 0 ? `SOURCES: ${totalCount} [V:${videoCount} | A:${audioCount}]` : '';
+
+    // Hide the "NO SWIMMERS ASSIGNED" placeholder box once sources are attached.
+    const placeholderBox = twist.querySelector('.matrix-container');
+    if (placeholderBox) placeholderBox.style.display = totalCount > 0 ? 'none' : '';
+
     const svg = twist.querySelector('svg');
+    const isMonitor = twist.classList.contains('monitor-twist');
+
+    if (totalCount === 0) {
+        // Empty: stay compact and collapse the helix.
+        if (!isMonitor) {
+            twist.style.minWidth = '200px';
+            twist.style.width = '';
+        }
+        if (svg) {
+            svg.innerHTML = '';
+            svg.style.height = '0';
+            svg.style.marginTop = '0';
+        }
+        return;
+    }
+
+    // Filled: fill the available horizontal space with a fixed-width strand and
+    // pack one cycle per source, so more sources = higher frequency (doubling the
+    // sources doubles the frequency) rather than ever-widening the twist.
+    const cycles = totalCount;
+    let width;
+    if (isMonitor) {
+        // Monitors keep their flex 1/3 width; size the helix to their own box.
+        width = Math.max(120, Math.floor(twist.clientWidth) - 40);
+    } else {
+        const avail = (twist.parentElement && twist.parentElement.clientWidth) || 600;
+        width = Math.max(320, Math.floor(avail) - 90); // leave room for the LCARS spine
+        twist.style.minWidth = `${width}px`;
+        twist.style.width = `${width}px`;
+    }
+
     if (svg) {
         svg.setAttribute('viewBox', `0 0 ${width} 100`);
-        const title = twist.querySelector('.twist-title');
-        const defaultColor = title ? title.style.color : 'var(--magenta)';
-        
+
         let sourceColors = [];
         swimmers.forEach(s => {
             const compColor = window.getComputedStyle(s).color;
             sourceColors.push(compColor);
         });
-        
-        if (totalCount === 0) {
-            svg.innerHTML = '';
-        } else {
-            svg.innerHTML = getDNAHtml(cycles, width, sourceColors);
-        }
+
+        svg.innerHTML = getDNAHtml(cycles, width, sourceColors);
+        svg.style.height = isMonitor ? '55px' : '100px';
+        svg.style.marginTop = isMonitor ? '6px' : '10px';
     }
 }

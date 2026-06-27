@@ -6,8 +6,20 @@ let inputDragSrcEl = null;
 
 async function fetchJSON(url) {
     try {
-        const res = await fetch(url);
-        return await res.json();
+        // no-store bypasses stale browser cache (e.g. an empty copy cached
+        // before the file existed), which otherwise yields "Unexpected end of
+        // JSON input" on an actually-valid file.
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) {
+            console.warn(`fetchJSON: HTTP ${res.status} for ${url}`);
+            return null;
+        }
+        const text = await res.text();
+        if (!text.trim()) {
+            console.warn(`fetchJSON: empty response for ${url}`);
+            return null;
+        }
+        return JSON.parse(text);
     } catch (e) {
         console.error("Failed to load:", url, e);
         return null;
@@ -65,4 +77,11 @@ function switchTab(tabId, event) {
     const targetTab = document.getElementById('tab-' + tabId);
     targetTab.style.display = 'block';
     targetTab.classList.add('active');
+
+    // Show PROGRAM OUTPUTS only while a master/encoder tab is selected.
+    const prodPool = document.querySelector('.productions-super-pool');
+    if (prodPool) {
+        const isMaster = window.masterTabIds && window.masterTabIds.has(tabId);
+        prodPool.style.display = isMaster ? '' : 'none';
+    }
 }
