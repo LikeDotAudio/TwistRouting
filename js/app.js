@@ -86,12 +86,16 @@ async function addDestinationTree(baseUrl, parentGroup, groupColorRgb, parentNam
     const { dirs, files } = await listDirectory(baseUrl);
 
     if (files.length) {
+        const ns = baseUrl.replace(/[^a-zA-Z0-9]/g, '-');  // unique per folder
         const programs = [];
         for (const f of files) {
             const data = await fetchJSON(baseUrl + f.href);
             if (data) programs.push(data);
         }
         programs.forEach((pgm, i) => {
+            // Namespace the id by folder so copies in different categories (e.g.
+            // Edit Suites duplicated from Encoders) don't collide on tab ids.
+            pgm.id = ns + '--' + pgm.id;
             if (parentName) pgm.parentName = parentName;
             pgm.color = DEST_TAB_COLORS[i % DEST_TAB_COLORS.length];
             TopBar.addTab(pgm, { group: parentGroup, active: false, color: pgm.color });
@@ -111,27 +115,17 @@ async function initApp() {
     TopBar.init(tabsContainer, contentContainer);
 
     // ===== DESTINATIONS — consume signals via twists (matrix landing spots) =====
-    // Top-level categories (no outer wrapper); only Floors nests one level deeper.
-
-    // Control Rooms (formerly "productions"): they take inputs only — their
-    // program outputs live on the Sources side, not here. Subfolders (e.g.
-    // Main / Backup) become nested groups.
-    const crGroup = TopBar.addGroup('CONTROL ROOMS', { color: '100,109,204' });
-    await addDestinationTree('Destinations/Control%20Rooms/', crGroup, '100,109,204');
-
-    // Floors — a FLOORS group holding one nested group per floor, whose rooms
-    // (one *.json each) are the tabs, titled e.g. "1ST FLOOR — ROOM 1".
-    const floorsParent = TopBar.addGroup('FLOORS', { color: '63,193,201', collapsed: true });
-    await addDestinationTree('Destinations/Floors/', floorsParent, '63,193,201');
-
-    // Encoders.
-    const encoders = await loadProgramFolder('Destinations/Encoders/');
-    encoders.forEach((pgm) => { pgm.color = '#ff3366'; });
-    const encGroup = TopBar.addGroup('ENCODERS', { color: '255,51,102', collapsed: true });
-    encoders.forEach((pgm) => {
-        TopBar.addTab(pgm, { group: encGroup, active: false });
-    });
-    renderPrograms(encoders);
+    // Every subfolder of Destinations/ is a category (Control Rooms, Edit Suites,
+    // Encoders, Floors, …), discovered dynamically; each may nest further. Drop
+    // in a new category folder and it appears — no code change needed.
+    const DEST_GROUP_COLORS = ['100,109,204', '160,110,180', '255,51,102', '63,193,201', '198,120,37', '120,160,90'];
+    const destDir = await listDirectory('Destinations/');
+    for (let di = 0; di < destDir.dirs.length; di++) {
+        const cat = destDir.dirs[di];
+        const colorRgb = DEST_GROUP_COLORS[di % DEST_GROUP_COLORS.length];
+        const catGroup = TopBar.addGroup(cat.name.toUpperCase(), { color: colorRgb, collapsed: di !== 0 });
+        await addDestinationTree('Destinations/' + cat.href, catGroup, colorRgb);
+    }
 
     // ===== SOURCES — draggable signals fed into destination twists =====
 

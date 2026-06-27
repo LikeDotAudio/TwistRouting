@@ -56,28 +56,44 @@ def is_ignored(rel_path):
     return any(p in IGNORE or p.startswith('.') for p in parts)
 
 def get_changed_files(project_dir):
-    """Return (to_upload, to_delete) relative paths from git status."""
+    """Return (to_upload, to_delete) relative paths from git status.
+
+    Handles -z porcelain correctly, including renames/copies whose record carries
+    TWO NUL-separated paths (new then original) — the original is removed remotely
+    and the new path uploaded.
+    """
     result = subprocess.run(
         ['git', '-C', project_dir, 'status', '--porcelain', '-z'],
         capture_output=True, text=True, check=True
     )
+    tokens = result.stdout.split('\0')
     to_upload = []
     to_delete = []
-    # -z output is NUL-separated; renames carry two paths but we keep it simple
-    for entry in result.stdout.split('\0'):
+    i = 0
+    while i < len(tokens):
+        entry = tokens[i]
         if not entry:
+            i += 1
             continue
         status = entry[:2]
         path = entry[3:]
+        is_rename = 'R' in status or 'C' in status
+        if is_rename:
+            # The next token is the original (old) path for this rename/copy.
+            orig = tokens[i + 1] if i + 1 < len(tokens) else ''
+            i += 2
+            if orig and not is_ignored(orig):
+                to_delete.append(orig)
+            if not is_ignored(path) and os.path.isfile(os.path.join(project_dir, path)):
+                to_upload.append(path)
+            continue
+        i += 1
         if is_ignored(path):
             continue
-        # 'D' in either column means the file was deleted locally
         if 'D' in status:
             to_delete.append(path)
-        else:
-            # Modified, added, untracked, renamed, etc.
-            if os.path.isfile(os.path.join(project_dir, path)):
-                to_upload.append(path)
+        elif os.path.isfile(os.path.join(project_dir, path)):
+            to_upload.append(path)
     return to_upload, to_delete
 
 def get_all_files(project_dir):
@@ -124,6 +140,14 @@ def upload_to_ftp():
         # Nothing changed — upload the whole project instead.
         print("No changes detected — uploading everything.")
         to_upload = get_all_files(project_dir)
+    else:
+        # Always (re)upload every manifest so the app's folder discovery on the
+        # server is never stale after a rename/move — these drive what renders.
+        manifests = [f for f in get_all_files(project_dir)
+                     if os.path.basename(f) == 'index.json']
+        for m in manifests:
+            if m not in to_upload:
+                to_upload.append(m)
 
     print(f"Connecting to FTP server {FTP_HOST} (Explicit FTPS) as {FTP_USER}...")
     try:
