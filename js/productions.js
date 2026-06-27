@@ -56,17 +56,20 @@ function renderPrograms(programs) {
         if (!container) return;
         
         let html = `
-            <div class="program-row" style="--prod-color: ${pgm.color || '#ffaa00'}; position: relative; overflow: hidden; padding: 0; margin-bottom: 10px;">
+            <div class="program-row" style="--prod-color: ${pgm.color || '#ffaa00'}; position: relative; overflow: hidden; padding: 0; margin-bottom: 10px; flex: 1 1 auto;">
                 <div class="program-title" style="background: ${pgm.color || '#ffaa00'};">${pgm.name}</div>
                 <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
         `;
         
-        let monitorsHtml = '';
+        // Small twists (monitors, ISO recorders) are gathered into their own rows,
+        // each member ~1/4 width. rowKey groups them (monitors row, iso row, ...).
+        const rows = {};
+        const rowOrder = [];
         pgmTwists.forEach(twistObj => {
             let twistName = twistObj;
             let twistConfig = '';
             let lcarsColor = pgm.color || '#ffaa00';
-            let isMonitor = false;
+            let rowKey = null;
 
             if (typeof twistObj === 'object') {
                 twistName = twistObj.name;
@@ -74,26 +77,36 @@ function renderPrograms(programs) {
                 if (twistObj.accepts === 'video') lcarsColor = '#CC99CC';
                 if (twistObj.accepts === 'audio') lcarsColor = '#FF9C63';
                 if (twistObj.accepts === 'both') lcarsColor = '#CC99CC';
-                isMonitor = !!twistObj.monitor;
+                rowKey = twistObj.row || (twistObj.monitor ? 'monitors' : null);
             }
 
-            const sizing = isMonitor ? 'flex: 1 1 0; min-width: 0;' : 'flex: 0 0 auto; min-width: 200px;';
+            const isSmall = !!rowKey;
+            const sizing = isSmall ? 'flex: 1 1 0; min-width: 0;' : 'flex: 0 0 auto; min-width: 200px;';
+            const recordHtml = rowKey === 'iso' ? `
+                        <div class="record-controls">
+                            <button class="record-btn" onclick="toggleRecord(event, this)">RECORD</button>
+                            <span class="recording-indicator">RECORDING...</span>
+                        </div>` : '';
             const twistHtml = `
-                    <div class="twist-container${isMonitor ? ' monitor-twist' : ''}" ${twistConfig} style="--lcars-color: ${lcarsColor}; ${sizing}">
+                    <div class="twist-container${isSmall ? ' monitor-twist' : ''}" ${twistConfig} style="--lcars-color: ${lcarsColor}; ${sizing}">
                         <div class="twist-title">${twistName}</div>
                         <div class="twist-lip" title="Fold / unfold strand" onclick="toggleHelix(event, this)"></div>
+                        <div class="twist-foldbar" title="Fold / unfold strand" onclick="toggleHelix(event, this)"></div>
                         <div class="matrix-container" id="${pgm.id}-${twistName.replace(/\s+/g, '-').toLowerCase()}"></div>
-                        <svg class="dna-helix" viewBox="0 0 100 100" preserveAspectRatio="none" style="width: 100%; height: 0; display: block; margin-top: 0;"></svg>
+                        <svg class="dna-helix" viewBox="0 0 100 100" preserveAspectRatio="none" style="width: 100%; height: 0; display: block; margin-top: 0;"></svg>${recordHtml}
                     </div>
             `;
-            if (isMonitor) monitorsHtml += twistHtml;
-            else html += twistHtml;
+            if (isSmall) {
+                if (!(rowKey in rows)) { rows[rowKey] = ''; rowOrder.push(rowKey); }
+                rows[rowKey] += twistHtml;
+            } else {
+                html += twistHtml;
+            }
         });
 
-        // The small monitors sit together in one row, each ~1/3 width.
-        if (monitorsHtml) {
-            html += `<div class="monitor-row">${monitorsHtml}</div>`;
-        }
+        rowOrder.forEach(k => {
+            html += `<div class="monitor-row">${rows[k]}</div>`;
+        });
 
         html += `
                 </div>

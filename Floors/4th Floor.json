@@ -1,0 +1,61 @@
+{
+  "id": "floor4",
+  "name": "4TH FLOOR",
+  "color": "#3FC1C9",
+  "twists": [
+    {
+      "name": "Monitor 1",
+      "accepts": "video",
+      "maxVideo": 1,
+      "monitor": true
+    },
+    {
+      "name": "Monitor 2",
+      "accepts": "video",
+      "maxVideo": 1,
+      "monitor": true
+    },
+    {
+      "name": "Monitor 3",
+      "accepts": "video",
+      "maxVideo": 1,
+      "monitor": true
+    },
+    {
+      "name": "Monitor 4",
+      "accepts": "video",
+      "maxVideo": 1,
+      "monitor": true
+    },
+    {
+      "name": "IEM 1",
+      "accepts": "audio",
+      "row": "iem"
+    },
+    {
+      "name": "IEM 2",
+      "accepts": "audio",
+      "row": "iem"
+    },
+    {
+      "name": "IEM 3",
+      "accepts": "audio",
+      "row": "iem"
+    },
+    {
+      "name": "IEM 4",
+      "accepts": "audio",
+      "row": "iem"
+    },
+    {
+      "name": "Foldback 1",
+      "accepts": "audio",
+      "row": "foldback"
+    },
+    {
+      "name": "Foldback 2",
+      "accepts": "audio",
+      "row": "foldback"
+    }
+  ]
+}

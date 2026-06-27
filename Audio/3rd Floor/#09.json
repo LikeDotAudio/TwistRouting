@@ -1,0 +1,23 @@
+{
+  "id": "stagebox-309",
+  "name": "STAGEBOX 309",
+  "prefix": "S309-",
+  "count": 12,
+  "extraClass": "audio-studio",
+  "floor": "3rd Floor",
+  "level": 300,
+  "items": [
+    "CH 1",
+    "CH 2",
+    "CH 3",
+    "CH 4",
+    "CH 5",
+    "CH 6",
+    "CH 7",
+    "CH 8",
+    "CH 9",
+    "CH 10",
+    "CH 11",
+    "CH 12"
+  ]
+}

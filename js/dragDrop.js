@@ -1,11 +1,29 @@
+// Fold a production output open (showing its feeds) accordion-style: opening one
+// closes the others, so only one production output is expanded at a time.
+function toggleProdOutput(node) {
+    const children = node.querySelector('.multiplex-children');
+    if (!children) return;
+    const willOpen = children.style.display === 'none';
+    document.querySelectorAll('.prod-source .multiplex-children').forEach(ch => {
+        if (ch !== children) ch.style.display = 'none';
+    });
+    children.style.display = willOpen ? 'flex' : 'none';
+}
+
 function makeNodeDraggable(node) {
     node.draggable = true;
     if (!node.id) node.id = 'swimmer-' + Math.random().toString(36).substr(2, 9);
-    
+
+    const isProdOutput = node.classList.contains('prod-source') && node.classList.contains('multiplex');
     let holdTimer;
-    
-    if (node.classList.contains('multiplex')) {
+
+    // Studio-style multiplexes still use hold-to-expand; production outputs fold
+    // on a plain click (handled below), like the pool headers.
+    if (node.classList.contains('multiplex') && !isProdOutput) {
         const startHold = (e) => {
+            // Don't toggle when the press is on a child sub-stream (it bubbles up);
+            // that would collapse the group while a source is being dragged out.
+            if (e.target.closest('.multiplex-children')) return;
             e.stopPropagation();
             holdTimer = setTimeout(() => {
                 const children = node.querySelector('.multiplex-children');
@@ -14,12 +32,12 @@ function makeNodeDraggable(node) {
                 }
             }, 400);
         };
-        
+
         const clearHold = () => clearTimeout(holdTimer);
 
         node.addEventListener('mousedown', startHold);
         node.addEventListener('touchstart', startHold, {passive: true});
-        
+
         node.addEventListener('mouseup', clearHold);
         node.addEventListener('mouseleave', clearHold);
         node.addEventListener('touchend', clearHold);
@@ -29,6 +47,10 @@ function makeNodeDraggable(node) {
 
     node.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (isProdOutput) {
+            toggleProdOutput(node);
+            return;
+        }
         if (e.ctrlKey || e.metaKey) {
             if (selectedPoolNodes.has(node)) {
                 selectedPoolNodes.delete(node);

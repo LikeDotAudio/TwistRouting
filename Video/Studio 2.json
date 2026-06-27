@@ -1,8 +1,0 @@
-{
-  "id": "video-pool-studio2",
-  "name": "STUDIO 2",
-  "prefix": "ST2-",
-  "count": 8,
-  "extraClass": "video-st2",
-  "color": "#FFCC99"
-}

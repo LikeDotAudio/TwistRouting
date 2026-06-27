@@ -1,0 +1,23 @@
+{
+  "id": "stagebox-405",
+  "name": "STAGEBOX 405",
+  "prefix": "S405-",
+  "count": 12,
+  "extraClass": "audio-studio",
+  "floor": "4th Floor",
+  "level": 400,
+  "items": [
+    "CH 1",
+    "CH 2",
+    "CH 3",
+    "CH 4",
+    "CH 5",
+    "CH 6",
+    "CH 7",
+    "CH 8",
+    "CH 9",
+    "CH 10",
+    "CH 11",
+    "CH 12"
+  ]
+}

@@ -55,7 +55,9 @@ function updateTwistVisuals(twist) {
     const dropZone = twist.querySelector('.drop-zone');
     if (!dropZone) return;
     
-    const swimmers = dropZone.querySelectorAll('.signal-node');
+    // Count leaf sources (incl. those tucked inside a dropped group chip), but
+    // not the group wrapper itself.
+    const swimmers = dropZone.querySelectorAll('.signal-node:not(.dropped-group)');
     const totalCount = swimmers.length;
     let videoCount = 0;
     let audioCount = 0;

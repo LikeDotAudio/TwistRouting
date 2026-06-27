@@ -1,0 +1,10 @@
+{
+  "id": "video-stagebox-303",
+  "name": "STAGEBOX 303",
+  "prefix": "V303-",
+  "count": 8,
+  "extraClass": "video-st3",
+  "color": "#87EEFF",
+  "floor": "3rd Floor",
+  "level": 300
+}

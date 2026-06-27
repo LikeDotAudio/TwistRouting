@@ -1,0 +1,10 @@
+{
+  "id": "video-stagebox-510",
+  "name": "STAGEBOX 510",
+  "prefix": "V510-",
+  "count": 8,
+  "extraClass": "video-st1",
+  "color": "#C2B74B",
+  "floor": "5th Floor",
+  "level": 500
+}

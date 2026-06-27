@@ -26,6 +26,39 @@ async function fetchJSON(url) {
     }
 }
 
+// List an HTTP directory by parsing the autoindex HTML most dev servers return
+// (python -m http.server, nginx autoindex, etc.). Returns
+// { dirs: [{name, href}], files: [{name, href}] }, sorted naturally. Returns
+// empty arrays if the server exposes no listing — callers should treat that as
+// "nothing here" rather than an error.
+async function listDirectory(url) {
+    const out = { dirs: [], files: [] };
+    try {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) return out;
+        const html = await res.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        doc.querySelectorAll('a[href]').forEach(a => {
+            const href = a.getAttribute('href');
+            if (!href) return;
+            // Skip parent links, column-sort query links, anchors and absolute/external URLs.
+            if (href.startsWith('?') || href.startsWith('#') || href.startsWith('/')
+                || href.startsWith('..') || /^[a-z]+:\/\//i.test(href)) return;
+            const isDir = href.endsWith('/');
+            const name = decodeURIComponent(href.replace(/\/$/, ''));
+            if (!name || name === '.') return;
+            if (isDir) out.dirs.push({ name, href });
+            else if (name.toLowerCase().endsWith('.json')) out.files.push({ name, href });
+        });
+    } catch (e) {
+        console.warn('listDirectory failed for', url, e);
+    }
+    const byName = (a, b) => a.name.localeCompare(b.name, undefined, { numeric: true });
+    out.dirs.sort(byName);
+    out.files.sort(byName);
+    return out;
+}
+
 function toggleSuperPool(event, container) {
     if (event.target === container || event.target.closest('.super-pool-title')) {
         const content = container.querySelector('.super-pool-content');
@@ -69,12 +102,22 @@ function togglePool(headerEl) {
 function switchTab(tabId, event) {
     document.querySelectorAll('.tab, .lcars-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => {
-        c.style.display = 'none';
+        c.style.display = '';   // let the CSS class control visibility/layout
         c.classList.remove('active');
     });
-    
+
     event.currentTarget.classList.add('active');
     const targetTab = document.getElementById('tab-' + tabId);
-    targetTab.style.display = 'block';
+    targetTab.style.display = '';
     targetTab.classList.add('active');
+}
+
+// Toggle an ISO recorder's RECORD button between RECORD and STOP, showing a
+// "RECORDING..." indicator while armed.
+function toggleRecord(event, btn) {
+    event.stopPropagation();
+    const recording = btn.classList.toggle('recording');
+    btn.innerText = recording ? 'STOP' : 'RECORD';
+    const indicator = btn.parentElement.querySelector('.recording-indicator');
+    if (indicator) indicator.style.display = recording ? 'inline' : 'none';
 }

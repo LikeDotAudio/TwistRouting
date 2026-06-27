@@ -74,6 +74,112 @@
       "accepts": "video",
       "maxVideo": 1,
       "monitor": true
+    },
+    {
+      "name": "Monitor 4",
+      "accepts": "video",
+      "maxVideo": 1,
+      "monitor": true
+    },
+    {
+      "name": "ISO 1",
+      "accepts": "both",
+      "maxVideo": 1,
+      "maxAudio": 16,
+      "inputs": [
+        "TRK 1",
+        "TRK 2",
+        "TRK 3",
+        "TRK 4",
+        "TRK 5",
+        "TRK 6",
+        "TRK 7",
+        "TRK 8",
+        "TRK 9",
+        "TRK 10",
+        "TRK 11",
+        "TRK 12",
+        "TRK 13",
+        "TRK 14",
+        "TRK 15",
+        "TRK 16"
+      ],
+      "row": "iso"
+    },
+    {
+      "name": "ISO 2",
+      "accepts": "both",
+      "maxVideo": 1,
+      "maxAudio": 16,
+      "inputs": [
+        "TRK 1",
+        "TRK 2",
+        "TRK 3",
+        "TRK 4",
+        "TRK 5",
+        "TRK 6",
+        "TRK 7",
+        "TRK 8",
+        "TRK 9",
+        "TRK 10",
+        "TRK 11",
+        "TRK 12",
+        "TRK 13",
+        "TRK 14",
+        "TRK 15",
+        "TRK 16"
+      ],
+      "row": "iso"
+    },
+    {
+      "name": "ISO 3",
+      "accepts": "both",
+      "maxVideo": 1,
+      "maxAudio": 16,
+      "inputs": [
+        "TRK 1",
+        "TRK 2",
+        "TRK 3",
+        "TRK 4",
+        "TRK 5",
+        "TRK 6",
+        "TRK 7",
+        "TRK 8",
+        "TRK 9",
+        "TRK 10",
+        "TRK 11",
+        "TRK 12",
+        "TRK 13",
+        "TRK 14",
+        "TRK 15",
+        "TRK 16"
+      ],
+      "row": "iso"
+    },
+    {
+      "name": "ISO 4",
+      "accepts": "both",
+      "maxVideo": 1,
+      "maxAudio": 16,
+      "inputs": [
+        "TRK 1",
+        "TRK 2",
+        "TRK 3",
+        "TRK 4",
+        "TRK 5",
+        "TRK 6",
+        "TRK 7",
+        "TRK 8",
+        "TRK 9",
+        "TRK 10",
+        "TRK 11",
+        "TRK 12",
+        "TRK 13",
+        "TRK 14",
+        "TRK 15",
+        "TRK 16"
+      ],
+      "row": "iso"
     }
   ]
 }

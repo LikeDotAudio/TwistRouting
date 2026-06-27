@@ -29,7 +29,9 @@ function populateAudioPool(poolId, prefix, count, extraClass, items, color) {
             const node = document.createElement('div');
             node.className = `signal-node audio ${extraClass}`;
             node.innerText = item;
-            node.id = 'pool-' + item.replace(/[^a-zA-Z0-9]/g, '-');
+            // Namespace the id by poolId so boxes sharing item labels (e.g. the
+            // generic "CH 1".."CH 12" across all stage boxes) stay unique.
+            node.id = 'pool-' + poolId + '-' + item.replace(/[^a-zA-Z0-9]/g, '-');
             node.style.animationDelay = `${Math.random() * 2}s`;
             if (color) styleAudioNode(node, color);
             poolGrid.appendChild(node);

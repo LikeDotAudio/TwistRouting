@@ -1,0 +1,10 @@
+{
+  "id": "video-stagebox-404",
+  "name": "STAGEBOX 404",
+  "prefix": "V404-",
+  "count": 8,
+  "extraClass": "video-st4",
+  "color": "#97587B",
+  "floor": "4th Floor",
+  "level": 400
+}

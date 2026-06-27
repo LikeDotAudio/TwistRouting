@@ -1,0 +1,10 @@
+{
+  "id": "video-stagebox-206",
+  "name": "STAGEBOX 206",
+  "prefix": "V206-",
+  "count": 8,
+  "extraClass": "video-st2",
+  "color": "#3786FF",
+  "floor": "2nd Floor",
+  "level": 200
+}

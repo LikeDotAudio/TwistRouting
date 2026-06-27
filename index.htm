@@ -198,6 +198,64 @@
             pointer-events: none;
         }
 
+        /* ISO recorder RECORD / STOP control */
+        .record-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .record-btn {
+            background: #ff3344;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 14px;
+            font-weight: 900;
+            font-size: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .record-btn:hover {
+            filter: brightness(1.15);
+        }
+        .record-btn.recording {
+            background: #000;
+            border: 1px solid #ff3344;
+            color: #ff3344;
+        }
+        .recording-indicator {
+            display: none;
+            color: #ff3344;
+            font-weight: 900;
+            font-size: 10px;
+            letter-spacing: 1px;
+            animation: recPulse 1s steps(1) infinite;
+        }
+        @keyframes recPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+        /* A dropped video+audio group: one compact chip in the group's colour,
+           with the individual feeds tucked inside (click to expand). */
+        .dropped-group {
+            cursor: pointer;
+            border-width: 2px;
+            font-weight: bold;
+        }
+        .dropped-group-header {
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .dropped-group-children {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 5px;
+            padding-top: 5px;
+            border-top: 1px dashed rgba(255,255,255,0.25);
+        }
+
         .signal-node.video {
             border-color: var(--video-color);
             color: var(--video-color);
@@ -374,6 +432,19 @@
         .twist-container.monitor-twist .twist-lip::after {
             top: 1px;
             font-size: 9px;
+        }
+        /* The whole left LCARS bar also folds/unfolds the strand when clicked */
+        .twist-foldbar {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 45px;
+            height: 100%;
+            z-index: 2;
+            cursor: pointer;
+        }
+        .twist-container.monitor-twist .twist-foldbar {
+            width: 26px;
         }
 
         /* SVG Helix Animation */
@@ -736,7 +807,9 @@
             color: #000;
         }
         .tab-content.active {
-            display: block;
+            display: flex;
+            flex-direction: column;
+            min-height: 100%; /* fill the panel so the LCARS spine reaches the bottom */
         }
 
         @media (max-width: 768px) {
@@ -808,14 +881,14 @@
         </div>
     </div>
 
-    <script src="js/globals.js?v=25"></script>
-    <script src="js/poolVideo.js?v=25"></script>
-    <script src="js/poolAudio.js?v=25"></script>
-    <script src="js/visuals.js?v=25"></script>
-    <script src="js/matrix.js?v=25"></script>
-    <script src="js/dragDrop.js?v=25"></script>
-    <script src="js/productions.js?v=25"></script>
-    <script src="js/topbar.js?v=25"></script>
-    <script src="js/app.js?v=25"></script>
+    <script src="js/globals.js?v=29"></script>
+    <script src="js/poolVideo.js?v=29"></script>
+    <script src="js/poolAudio.js?v=29"></script>
+    <script src="js/visuals.js?v=29"></script>
+    <script src="js/matrix.js?v=29"></script>
+    <script src="js/dragDrop.js?v=29"></script>
+    <script src="js/productions.js?v=29"></script>
+    <script src="js/topbar.js?v=29"></script>
+    <script src="js/app.js?v=29"></script>
 </body>
 </html>

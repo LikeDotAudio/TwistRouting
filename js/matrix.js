@@ -71,20 +71,49 @@ function initializeTwists() {
                 if (node) {
                     if (sourceType === 'pool') {
                         if (node.classList.contains('multiplex')) {
-                            const subStreams = node.querySelectorAll('.sub-stream');
-                            subStreams.forEach(sub => {
-                                if (config && config.accepts) {
-                                    if (config.accepts === 'video' && !sub.classList.contains('video')) return;
-                                    if (config.accepts === 'audio' && !sub.classList.contains('audio')) return;
-                                }
-                                const subClone = sub.cloneNode(true);
-                                subClone.id = sub.id + '-' + Math.random().toString(36).substr(2, 6);
-                                subClone.classList.remove('sub-stream');
-                                subClone.classList.remove('selected');
-                                subClone.style.opacity = '1';
-                                subClone.draggable = false;
-                                appendWithLimit(subClone);
+                            // A dropped group shows as ONE compact chip in the group's
+                            // colour; the individual feeds live inside it (click to expand).
+                            const accepts = config && config.accepts;
+                            const accepted = Array.from(node.querySelectorAll('.sub-stream')).filter(sub => {
+                                if (accepts === 'video' && !sub.classList.contains('video')) return false;
+                                if (accepts === 'audio' && !sub.classList.contains('audio')) return false;
+                                return true;
                             });
+                            if (accepted.length) {
+                                const headerEl = node.querySelector('.multiplex-header');
+                                const groupName = headerEl ? headerEl.innerText : node.id;
+                                const groupColor = window.getComputedStyle(node).color;
+                                const group = document.createElement('div');
+                                group.className = 'signal-node dropped-group';
+                                group.style.borderColor = groupColor;
+                                group.style.color = groupColor;
+                                group.id = node.id + '-grp-' + Math.random().toString(36).substr(2, 6);
+
+                                const head = document.createElement('div');
+                                head.className = 'dropped-group-header';
+                                head.innerText = `${groupName} ×${accepted.length}`;
+
+                                const kids = document.createElement('div');
+                                kids.className = 'dropped-group-children';
+                                kids.style.display = 'none';
+                                accepted.forEach(sub => {
+                                    const c = sub.cloneNode(true);
+                                    c.id = sub.id + '-' + Math.random().toString(36).substr(2, 6);
+                                    c.classList.remove('sub-stream');
+                                    c.classList.remove('selected');
+                                    c.style.opacity = '1';
+                                    c.draggable = false;
+                                    kids.appendChild(c);
+                                });
+
+                                group.appendChild(head);
+                                group.appendChild(kids);
+                                group.addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    kids.style.display = kids.style.display === 'none' ? 'flex' : 'none';
+                                });
+                                dropZone.appendChild(group);
+                            }
                         } else {
                             if (config && config.accepts) {
                                 if (config.accepts === 'video' && !node.classList.contains('video')) return;

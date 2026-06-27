@@ -1,0 +1,185 @@
+{
+  "id": "prod7",
+  "name": "PROD 7",
+  "color": "#5566EE",
+  "twists": [
+    {
+      "name": "Video Mixer",
+      "accepts": "video",
+      "inputs": [
+        "SW IN 1",
+        "SW IN 2",
+        "SW IN 3",
+        "SW IN 4",
+        "SW IN 5",
+        "SW IN 6",
+        "SW IN 7",
+        "SW IN 8"
+      ]
+    },
+    {
+      "name": "Multi Viewer",
+      "accepts": "both",
+      "inputs": [
+        "MV 1",
+        "MV 2",
+        "MV 3",
+        "MV 4",
+        "MV 5",
+        "MV 6"
+      ]
+    },
+    {
+      "name": "Audio Mixer",
+      "accepts": "audio",
+      "inputs": [
+        "CH 1",
+        "CH 2",
+        "CH 3",
+        "CH 4",
+        "CH 5",
+        "CH 6",
+        "CH 7",
+        "CH 8",
+        "CH 9",
+        "CH 10",
+        "CH 11",
+        "CH 12"
+      ]
+    },
+    {
+      "name": "Intercom",
+      "accepts": "audio",
+      "inputs": [
+        "ICOM 1",
+        "ICOM 2",
+        "ICOM 3",
+        "ICOM 4"
+      ]
+    },
+    {
+      "name": "Monitor 1",
+      "accepts": "video",
+      "maxVideo": 1,
+      "monitor": true
+    },
+    {
+      "name": "Monitor 2",
+      "accepts": "video",
+      "maxVideo": 1,
+      "monitor": true
+    },
+    {
+      "name": "Monitor 3",
+      "accepts": "video",
+      "maxVideo": 1,
+      "monitor": true
+    },
+    {
+      "name": "Monitor 4",
+      "accepts": "video",
+      "maxVideo": 1,
+      "monitor": true
+    },
+    {
+      "name": "ISO 1",
+      "accepts": "both",
+      "maxVideo": 1,
+      "maxAudio": 16,
+      "inputs": [
+        "TRK 1",
+        "TRK 2",
+        "TRK 3",
+        "TRK 4",
+        "TRK 5",
+        "TRK 6",
+        "TRK 7",
+        "TRK 8",
+        "TRK 9",
+        "TRK 10",
+        "TRK 11",
+        "TRK 12",
+        "TRK 13",
+        "TRK 14",
+        "TRK 15",
+        "TRK 16"
+      ],
+      "row": "iso"
+    },
+    {
+      "name": "ISO 2",
+      "accepts": "both",
+      "maxVideo": 1,
+      "maxAudio": 16,
+      "inputs": [
+        "TRK 1",
+        "TRK 2",
+        "TRK 3",
+        "TRK 4",
+        "TRK 5",
+        "TRK 6",
+        "TRK 7",
+        "TRK 8",
+        "TRK 9",
+        "TRK 10",
+        "TRK 11",
+        "TRK 12",
+        "TRK 13",
+        "TRK 14",
+        "TRK 15",
+        "TRK 16"
+      ],
+      "row": "iso"
+    },
+    {
+      "name": "ISO 3",
+      "accepts": "both",
+      "maxVideo": 1,
+      "maxAudio": 16,
+      "inputs": [
+        "TRK 1",
+        "TRK 2",
+        "TRK 3",
+        "TRK 4",
+        "TRK 5",
+        "TRK 6",
+        "TRK 7",
+        "TRK 8",
+        "TRK 9",
+        "TRK 10",
+        "TRK 11",
+        "TRK 12",
+        "TRK 13",
+        "TRK 14",
+        "TRK 15",
+        "TRK 16"
+      ],
+      "row": "iso"
+    },
+    {
+      "name": "ISO 4",
+      "accepts": "both",
+      "maxVideo": 1,
+      "maxAudio": 16,
+      "inputs": [
+        "TRK 1",
+        "TRK 2",
+        "TRK 3",
+        "TRK 4",
+        "TRK 5",
+        "TRK 6",
+        "TRK 7",
+        "TRK 8",
+        "TRK 9",
+        "TRK 10",
+        "TRK 11",
+        "TRK 12",
+        "TRK 13",
+        "TRK 14",
+        "TRK 15",
+        "TRK 16"
+      ],
+      "row": "iso"
+    }
+  ]
+}

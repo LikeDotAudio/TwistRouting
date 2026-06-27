@@ -1,0 +1,23 @@
+{
+  "id": "stagebox-507",
+  "name": "STAGEBOX 507",
+  "prefix": "S507-",
+  "count": 12,
+  "extraClass": "audio-studio",
+  "floor": "5th Floor",
+  "level": 500,
+  "items": [
+    "CH 1",
+    "CH 2",
+    "CH 3",
+    "CH 4",
+    "CH 5",
+    "CH 6",
+    "CH 7",
+    "CH 8",
+    "CH 9",
+    "CH 10",
+    "CH 11",
+    "CH 12"
+  ]
+}
