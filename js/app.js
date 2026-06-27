@@ -98,52 +98,15 @@ async function initApp() {
     });
     renderPrograms(floorPrograms);
 
-    // Load Video Pools
-    const videoFiles = ['Studio 1.json', 'Studio 2.json', 'Studio 3.json', 'Studio 4.json', 'Remotes.json', 'Sats.json'];
+    // Load Video — dynamically discover the Video/ tree (floors → stage boxes)
+    // and render it as nested collapsible groups.
     const videoSuper = document.getElementById('video-super-pool-content');
-    for (let file of videoFiles) {
-        try {
-            const data = await fetchJSON('Video/' + file);
-            if (data && typeof renderVideoPool === 'function') {
-                renderVideoPool(data, videoSuper);
-            }
-        } catch (e) {
-            console.error('Error loading video pool:', e);
-        }
-    }
-    
-    // Load Audio Stage Boxes — organized into floor folders (100/200/300/400/500
-    // level), 10 boxes each (#01..#10). Static hosting can't list directories, so
-    // the folder/box layout is enumerated here.
+    await renderMediaTree('Video/', videoSuper, 'video', 0, null);
+
+    // Load Audio — dynamically discover the Audio/ tree (floors → stage boxes)
+    // and render it as nested collapsible groups.
     const audioSuper = document.getElementById('audio-super-pool-content');
-    const audioFloors = ['1st Floor', '2nd Floor', '3rd Floor', '4th Floor', '5th Floor'];
-    const BOXES_PER_FLOOR = 10;
-    for (let f = 0; f < audioFloors.length; f++) {
-        const floor = audioFloors[f];
-        const floorColor = AUDIO_POOL_COLORS[f % AUDIO_POOL_COLORS.length];
-        let floorHasBoxes = false;
-        for (let b = 1; b <= BOXES_PER_FLOOR; b++) {
-            const box = '#' + b.toString().padStart(2, '0');
-            // '#' is a URL fragment delimiter, so encode it for fetch().
-            const url = `Audio/${floor}/${box}.json`.replace(/#/g, '%23');
-            try {
-                const data = await fetchJSON(url);
-                if (data && typeof renderAudioPool === 'function') {
-                    if (!floorHasBoxes) {
-                        const label = document.createElement('div');
-                        label.className = 'audio-floor-label';
-                        label.textContent = `${floor} — ${(f + 1) * 100} Level`;
-                        label.style.cssText = `color:${floorColor}; font-size:11px; font-weight:bold; margin:10px 0 4px; letter-spacing:1px;`;
-                        audioSuper.appendChild(label);
-                        floorHasBoxes = true;
-                    }
-                    renderAudioPool(data, audioSuper, floorColor);
-                }
-            } catch (e) {
-                console.error('Error loading audio stage box:', url, e);
-            }
-        }
-    }
+    await renderMediaTree('Audio/', audioSuper, 'audio', 0, null);
 
     // Load Masters
     const masterFiles = ['Encoder 1.json', 'Encoder 2.json', 'Encoder 4.json'];

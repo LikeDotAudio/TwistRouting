@@ -58,7 +58,7 @@ function renderPrograms(programs) {
         let html = `
             <div class="program-row" style="--prod-color: ${pgm.color || '#ffaa00'}; position: relative; overflow: hidden; padding: 0; margin-bottom: 10px; flex: 1 1 auto;">
                 <div class="program-title" style="background: ${pgm.color || '#ffaa00'};">${pgm.name}</div>
-                <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
+                <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding-right: 60px;">
         `;
         
         // Small twists (monitors, ISO recorders) are gathered into their own rows,
