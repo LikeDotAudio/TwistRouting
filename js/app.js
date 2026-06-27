@@ -12,8 +12,9 @@ function makeMediaGroup(container, title, color, depth) {
     const content = document.createElement('div');
     content.className = 'media-group-content';
     // A vertical bar in the group's colour runs down the left of the children
-    // (which are pushed to the right), showing they belong to this group.
-    content.style.cssText = `display:none; margin-left:${depth * 10 + 6}px; padding-left:12px; border-left:3px solid ${color}; border-radius:0 0 0 6px;`;
+    // (which are pushed to the right), showing they belong to this group and
+    // extending downward for the whole length of the expanded children.
+    content.style.cssText = `display:none; margin:4px 0 12px ${depth * 12 + 12}px; padding:6px 0 6px 16px; border-left:4px solid ${color}; box-shadow:-1px 0 8px ${color}66; border-radius:0 0 0 8px;`;
 
     // Self-contained toggle (not the pool accordion) so nested folders fold
     // independently of the stage-box pools inside them.
@@ -72,6 +73,36 @@ async function loadProgramFolder(baseUrl) {
     return out;
 }
 
+// Distinct colours for destination tabs (each tab's tab + content L-bar match).
+const DEST_TAB_COLORS = ['#9C6B9C', '#3786FF', '#5CB8C4', '#D45F10', '#C2B74B', '#97587B', '#46A06E', '#C19880'];
+
+// Populate a destination category (CONTROL ROOMS, FLOORS, …) from a folder:
+// subfolders become nested collapsible groups, *.json files become tabs. Each
+// tab gets a distinct colour and remembers its immediate folder as parentName,
+// so the title reads e.g. "MAIN — PROD 1" or "1ST FLOOR — ROOM 1".
+async function addDestinationTree(baseUrl, parentGroup, groupColorRgb, parentName) {
+    const { dirs, files } = await listDirectory(baseUrl);
+
+    if (files.length) {
+        const programs = [];
+        for (const f of files) {
+            const data = await fetchJSON(baseUrl + f.href);
+            if (data) programs.push(data);
+        }
+        programs.forEach((pgm, i) => {
+            if (parentName) pgm.parentName = parentName;
+            pgm.color = DEST_TAB_COLORS[i % DEST_TAB_COLORS.length];
+            TopBar.addTab(pgm, { group: parentGroup, active: false, color: pgm.color });
+        });
+        renderPrograms(programs);
+    }
+
+    for (const dir of dirs) {
+        const sub = TopBar.addGroup(dir.name.toUpperCase(), { parent: parentGroup, color: groupColorRgb, collapsed: true });
+        await addDestinationTree(baseUrl + dir.href, sub, groupColorRgb, dir.name);
+    }
+}
+
 async function initApp() {
     const tabsContainer = document.getElementById('production-tabs');
     const contentContainer = document.getElementById('production-content');
@@ -81,32 +112,15 @@ async function initApp() {
     // Top-level categories (no outer wrapper); only Floors nests one level deeper.
 
     // Control Rooms (formerly "productions"): they take inputs only — their
-    // program outputs live on the Sources side, not here.
-    const controlRooms = await loadProgramFolder('Destinations/Control%20Rooms/');
+    // program outputs live on the Sources side, not here. Subfolders (e.g.
+    // Main / Backup) become nested groups.
     const crGroup = TopBar.addGroup('CONTROL ROOMS', { color: '100,109,204' });
-    controlRooms.forEach((pgm, index) => {
-        TopBar.addTab(pgm, { group: crGroup, active: index === 0 });
-    });
-    renderPrograms(controlRooms);
+    await addDestinationTree('Destinations/Control%20Rooms/', crGroup, '100,109,204');
 
     // Floors — a FLOORS group holding one nested group per floor, whose rooms
-    // (one *.json each) are the tabs. Each room gets a distinct colour used for
-    // both its tab and its content L-bar, and remembers its floor as parentName
-    // so the title reads e.g. "1ST FLOOR — ROOM 1".
-    const ROOM_COLORS = ['#9C6B9C', '#3786FF', '#5CB8C4', '#D45F10', '#C2B74B', '#97587B', '#46A06E', '#C19880'];
+    // (one *.json each) are the tabs, titled e.g. "1ST FLOOR — ROOM 1".
     const floorsParent = TopBar.addGroup('FLOORS', { color: '63,193,201', collapsed: true });
-    const floorsDir = await listDirectory('Destinations/Floors/');
-    for (const floorDir of floorsDir.dirs) {
-        const rooms = await loadProgramFolder('Destinations/Floors/' + floorDir.href);
-        if (!rooms.length) continue;
-        const group = TopBar.addGroup(floorDir.name.toUpperCase(), { parent: floorsParent, color: '63,193,201', collapsed: true });
-        rooms.forEach((rm, ri) => {
-            rm.parentName = floorDir.name;
-            rm.color = ROOM_COLORS[ri % ROOM_COLORS.length];
-            TopBar.addTab(rm, { group, active: false, color: rm.color });
-        });
-        renderPrograms(rooms);
-    }
+    await addDestinationTree('Destinations/Floors/', floorsParent, '63,193,201');
 
     // Encoders.
     const encoders = await loadProgramFolder('Destinations/Encoders/');
