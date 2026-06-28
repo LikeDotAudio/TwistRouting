@@ -35,6 +35,60 @@ export function renderSourceLeaf(data, container, kind, color) {
     return renderVideoPool(data, container);
 }
 
+// ----- ganged stage boxes (square numbered cells) -------------------------
+function injectGangStyles() {
+    if (document.getElementById('source-gang-styles')) return;
+    const s = document.createElement('style');
+    s.id = 'source-gang-styles';
+    s.textContent = `
+        .gang-cap{font-size:10px;font-weight:bold;letter-spacing:2px;color:#9fb6cc;margin:2px 0 4px 4px;text-transform:uppercase;}
+        .gang-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:4px;margin:0 0 10px;}
+        .signal-node.gang-cell{border-radius:3px;padding:0;cursor:grab;display:flex;align-items:center;
+            justify-content:center;min-height:34px;background:rgba(0,0,0,.55);}
+        .signal-node.gang-cell .multiplex-header{font-size:13px;font-weight:bold;letter-spacing:1px;padding:9px 2px;width:100%;text-align:center;}
+        .signal-node.gang-cell .multiplex-children{display:none;flex-direction:column;gap:2px;padding:2px;}
+        .signal-node.gang-cell.fault{outline:2px solid #ff3344;}
+    `;
+    document.head.appendChild(s);
+}
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// One square draggable cell = a whole stage box (hold to expand its channels).
+function buildGangCell(data, suffix, color) {
+    const node = document.createElement('div');
+    node.className = 'signal-node audio multiplex gang-cell';
+    node.id = 'pool-' + (data.id || slugId(data.name));
+    node.draggable = true;
+    node.dataset.origin = data.origin || data.name;
+    node.dataset.status = data.status || 'OK';
+    const labels = (data.items && data.items.length)
+        ? data.items
+        : Array.from({ length: data.count || 0 }, (_, i) => `${data.prefix || ''}${String(i + 1).padStart(2, '0')}`);
+    let subs = '';
+    labels.forEach(l => {
+        subs += `<div class="signal-node audio ${data.extraClass || 'audio-studio'} sub-stream" draggable="true" id="pool-${node.id}-${slugId(l)}" data-origin="${data.origin || data.name}">${l}</div>`;
+    });
+    node.innerHTML = `<div class="multiplex-header">${suffix}</div><div class="multiplex-children" style="display:none;">${subs}</div>`;
+    styleSignalNode(node, color);
+    if (isFaultStatus(data.status)) { node.classList.add('fault'); node.querySelectorAll('.sub-stream').forEach(x => x.classList.add('fault')); }
+    return node;
+}
+
+function renderGang(container, word, leaves, color) {
+    injectGangStyles();
+    const cap = document.createElement('div');
+    cap.className = 'gang-cap'; cap.textContent = word; cap.style.color = color;
+    container.appendChild(cap);
+    const grid = document.createElement('div');
+    grid.className = 'gang-grid';
+    container.appendChild(grid);
+    const re = new RegExp('^' + escapeRe(word) + '\\s*', 'i');
+    leaves.forEach(d => {
+        const suffix = ((d.name || '').replace(re, '').trim()) || d.name;
+        grid.appendChild(buildGangCell(d, suffix, color));
+    });
+}
+
 // Recursively render a category: *.json leaves become pools, subfolders become
 // nested collapsible groups. Identical for every category — the leaf shape, read
 // at render time, picks the renderer.
