@@ -1,19 +1,4 @@
-// Shift a #rrggbb colour's lightness by amt (-100..100) for subtle per-node variation.
-function shadeColor(hex, amt) {
-    const m = /^#?([0-9a-fA-F]{6})$/.exec(hex || '');
-    if (!m) return hex;
-    const num = parseInt(m[1], 16);
-    const r = (num >> 16) & 255, g = (num >> 8) & 255, b = num & 255;
-    const f = amt / 100;
-    const adj = (c) => Math.max(0, Math.min(255, Math.round(c + (f < 0 ? c : 255 - c) * f)));
-    return '#' + ((adj(r) << 16) | (adj(g) << 8) | adj(b)).toString(16).padStart(6, '0');
-}
-
-function styleVideoNode(node, color) {
-    node.style.borderColor = color;
-    node.style.color = color;
-    node.style.boxShadow = `0 0 5px ${color}55`;
-}
+// shadeColor + styleSignalNode now live in js/util/color.js (loaded first).
 
 function populateVideoPool(poolId, prefix, count, extraClass, color, status) {
     const pool = document.getElementById(poolId);
@@ -39,10 +24,10 @@ function populateVideoPool(poolId, prefix, count, extraClass, color, status) {
         `;
         // Colour each source by its pool (e.g. Studio 3 = yellow), with a subtle
         // per-node border shade so individual sources stay distinguishable.
-        styleVideoNode(node, poolColor);
+        styleSignalNode(node, poolColor);
         node.style.borderColor = shadeColor(poolColor, ((i % 4) * 14) - 21);
         const vSub = node.querySelector(`#pool-${id}-V`);
-        if (vSub) styleVideoNode(vSub, poolColor);
+        if (vSub) styleSignalNode(vSub, poolColor);
         // Propagate fault status to the box and every feed inside it.
         node.dataset.status = status || 'OK';
         if (faulted) {
@@ -60,12 +45,11 @@ function populateVideoPool(poolId, prefix, count, extraClass, color, status) {
 
 function renderVideoPool(data, container) {
     const faulted = isFaultStatus(data.status);
-    const faultTag = faulted ? `<span class="fault-tag">⚠ ${data.status}</span>` : '';
     const group = document.createElement('div');
     group.className = 'input-group';
     group.innerHTML = `
         <div class="foldable-header${faulted ? ' fault' : ''}" title="${data.status || 'OK'}" style="--lcars-color: ${data.color || 'var(--lcars-color)'}; font-size: 11px; margin-bottom: 8px;" onclick="togglePool(this)">
-            <span>${data.name}${faultTag}</span>
+            <span>${data.name}${faultTag(data.status)}</span>
             <span class="fold-icon" style="transform: rotate(-90deg); display: inline-block; transition: transform 0.2s;">▼</span>
         </div>
         <div class="input-grid-video pool-content" id="${data.id}" style="display: none;">

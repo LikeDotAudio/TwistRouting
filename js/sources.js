@@ -4,8 +4,7 @@
 // right pool renderer based on the SHAPE of its own data (not its folder name),
 // so dropping a new category/folder/file in makes it appear with zero code edits.
 
-// LCARS spine colours handed to each top-level source super-pool, by order.
-const SOURCE_POOL_COLORS = ['#CC99CC', '#FF9C63', '#646DCC', '#3FC1C9', '#C67825', '#78A05A'];
+// Palettes (SOURCE_POOL_COLORS, AUDIO_POOL_COLORS) live in js/util/palette.js.
 
 // Decide how a leaf renders purely from what's in the JSON:
 //   players[]              -> playout  (players → videos → video+4-audio stacks)
@@ -53,10 +52,12 @@ async function renderSourceTree(baseUrl, container, depth, inheritColor, parentL
         const content = makeMediaGroup(container, d.name, groupColor, depth);
         const header = content.previousElementSibling;
         let loaded = false;
-        const load = () => {
+        const load = async () => {
             if (loaded) return;
             loaded = true;
-            renderSourceTree(baseUrl + d.href, content, depth + 1, groupColor, d.name);
+            await renderSourceTree(baseUrl + d.href, content, depth + 1, groupColor, d.name);
+            // Wire the freshly-rendered pool nodes for drag (mouse + touch).
+            if (typeof initializeDraggables === 'function') initializeDraggables();
         };
         if (header) header.addEventListener('click', load);
     });
@@ -83,11 +84,11 @@ function buildSuperPool(panel, name, color) {
 // manifest order. Reorder the manifest to reorder the panel — no code change.
 async function renderSourcesPanel(panel) {
     if (!panel) return;
-    const { dirs } = await listDirectory('Sources/');
+    const { dirs } = await listDirectory('Routes/Sources/');
     // Build the super-pools in manifest order, then fill them in parallel.
     await Promise.all(dirs.map((cat, i) => {
         const color = SOURCE_POOL_COLORS[i % SOURCE_POOL_COLORS.length];
         const content = buildSuperPool(panel, cat.name, color);
-        return renderSourceTree('Sources/' + cat.href, content, 0, null, null);
+        return renderSourceTree('Routes/Sources/' + cat.href, content, 0, null, null);
     }));
 }

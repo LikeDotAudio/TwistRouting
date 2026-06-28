@@ -1,23 +1,5 @@
-// Distinct LCARS shades mixing the ST:VIII(FC) and ST:X(NEM) palettes so each
-// audio pool is strongly differentiated from the next.
-const AUDIO_POOL_COLORS = [
-    '#FF9C00', // amber
-    '#3786FF', // azure
-    '#87EEFF', // cyan
-    '#D45F10', // deep orange
-    '#A89B35', // olive
-    '#97587B', // plum
-    '#46616E', // slate
-    '#C19880', // mauve
-    '#C2B74B', // gold
-    '#0A46EE'  // deep blue
-];
-
-function styleAudioNode(node, color) {
-    node.style.borderColor = color;
-    node.style.color = color;
-    node.style.boxShadow = `0 0 5px ${color}55`;
-}
+// AUDIO_POOL_COLORS now lives in js/util/palette.js; styleSignalNode in
+// js/util/color.js (both loaded first).
 
 function populateAudioPool(poolId, prefix, count, extraClass, items, color, status) {
     const poolGrid = document.getElementById(poolId);
@@ -37,9 +19,9 @@ function populateAudioPool(poolId, prefix, count, extraClass, items, color, stat
             node.innerText = item;
             // Namespace the id by poolId so boxes sharing item labels (e.g. the
             // generic "CH 1".."CH 12" across all stage boxes) stay unique.
-            node.id = 'pool-' + poolId + '-' + item.replace(/[^a-zA-Z0-9]/g, '-');
+            node.id = 'pool-' + poolId + '-' + slugId(item);
             node.style.animationDelay = `${Math.random() * 2}s`;
-            if (color) styleAudioNode(node, color);
+            if (color) styleSignalNode(node, color);
             tagNode(node);
             poolGrid.appendChild(node);
         });
@@ -51,7 +33,7 @@ function populateAudioPool(poolId, prefix, count, extraClass, items, color, stat
             node.innerText = `${prefix}${num}`;
             node.id = 'pool-' + prefix + num;
             node.style.animationDelay = `${Math.random() * 2}s`;
-            if (color) styleAudioNode(node, color);
+            if (color) styleSignalNode(node, color);
             tagNode(node);
             poolGrid.appendChild(node);
         }
@@ -61,12 +43,11 @@ function populateAudioPool(poolId, prefix, count, extraClass, items, color, stat
 function renderAudioPool(data, container, color) {
     const poolColor = color || data.color || '#00ffff';
     const faulted = isFaultStatus(data.status);
-    const faultTag = faulted ? `<span class="fault-tag">⚠ ${data.status}</span>` : '';
     const group = document.createElement('div');
     group.className = 'input-group';
     group.innerHTML = `
         <div class="foldable-header${faulted ? ' fault' : ''}" title="${data.status || 'OK'}" style="--lcars-color: ${poolColor}; background-color: ${poolColor}; font-size: 11px; margin-bottom: 8px;" onclick="togglePool(this)">
-            <span>${data.name}${faultTag}</span>
+            <span>${data.name}${faultTag(data.status)}</span>
             <span class="fold-icon" style="transform: rotate(-90deg); display: inline-block; transition: transform 0.2s;">▼</span>
         </div>
         <div class="input-grid-audio pool-content" id="${data.id}" style="display: none;">

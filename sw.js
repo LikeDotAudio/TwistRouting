@@ -10,33 +10,34 @@
 // To ship an update, bump CACHE_VERSION: the new worker re-crawls, then deletes
 // the old cache on activate. Clients pick it up on their next reload.
 
-const CACHE_VERSION = 'twist-v44';
+const CACHE_VERSION = 'twist-v45';
 
 // Static app shell. The static host ignores the ?v= query for files on disk, so
 // these stay valid across version bumps; runtime caching backfills anything new.
 const SHELL = [
     './',
     './index.htm',
-    './js/globals.js?v=44',
-    './js/poolVideo.js?v=44',
-    './js/poolAudio.js?v=44',
-    './js/visuals.js?v=44',
-    './js/matrix.js?v=44',
-    './js/editors/core.js?v=44',
-    './js/editors/iso-recorder.js?v=44',
-    './js/editors/multi-viewer.js?v=44',
-    './js/editors/vision-mixer.js?v=44',
-    './js/editors/audio-mixer.js?v=44',
-    './js/editors/intercom.js?v=44',
-    './js/dragDrop.js?v=44',
-    './js/productions.js?v=44',
-    './js/poolPlayout.js?v=44',
-    './js/sources.js?v=44',
-    './js/topbar.js?v=44',
-    './js/app.js?v=44',
-    './js/clock.js?v=44',
-    './Sources/index.json',
-    './Destinations/index.json',
+    './js/globals.js?v=45',
+    './js/poolVideo.js?v=45',
+    './js/poolAudio.js?v=45',
+    './js/visuals.js?v=45',
+    './js/matrix.js?v=45',
+    './js/editors/core.js?v=45',
+    './js/editors/iso-recorder.js?v=45',
+    './js/editors/multi-viewer.js?v=45',
+    './js/editors/vision-mixer.js?v=45',
+    './js/editors/audio-mixer.js?v=45',
+    './js/editors/intercom.js?v=45',
+    './js/dragDrop.js?v=45',
+    './js/touchDrag.js?v=45',
+    './js/productions.js?v=45',
+    './js/poolPlayout.js?v=45',
+    './js/sources.js?v=45',
+    './js/topbar.js?v=45',
+    './js/app.js?v=45',
+    './js/clock.js?v=45',
+    './Routes/Sources/index.json',
+    './Routes/Destinations/index.json',
 ];
 
 // Cache a single URL, tolerating individual failures (never reject the batch).
@@ -81,8 +82,8 @@ self.addEventListener('install', (event) => {
         await Promise.allSettled(SHELL.map(u => cacheOne(cache, u)));
         const seen = new Set();
         await Promise.allSettled([
-            crawl('Sources/', cache, seen),
-            crawl('Destinations/', cache, seen),
+            crawl('Routes/Sources/', cache, seen),
+            crawl('Routes/Destinations/', cache, seen),
         ]);
     })());
 });

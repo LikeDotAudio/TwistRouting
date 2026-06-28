@@ -31,8 +31,7 @@ function makeMediaGroup(container, title, color, depth) {
     return content;
 }
 
-// Distinct colours for destination tabs (each tab's tab + content L-bar match).
-const DEST_TAB_COLORS = ['#9C6B9C', '#3786FF', '#5CB8C4', '#D45F10', '#C2B74B', '#97587B', '#46A06E', '#C19880'];
+// DEST_TAB_COLORS / DEST_GROUP_COLORS now live in js/util/palette.js.
 
 // Populate a destination category (CONTROL ROOMS, FLOORS, …) from a folder:
 // subfolders become nested collapsible groups, *.json files become tabs. Each
@@ -82,14 +81,13 @@ async function initApp() {
     // Every subfolder of Destinations/ is a category (Control Rooms, Edit Suites,
     // Encoders, Floors, …), discovered dynamically; each may nest further. Drop
     // in a new category folder and it appears — no code change needed.
-    const DEST_GROUP_COLORS = ['100,109,204', '160,110,180', '255,51,102', '63,193,201', '198,120,37', '120,160,90'];
-    const destDir = await listDirectory('Destinations/');
+    const destDir = await listDirectory('Routes/Destinations/');
     // Build every category's bar (groups + tabs from the manifests) in parallel;
     // program content stays lazy until a tab is opened.
     const destLoad = Promise.all(destDir.dirs.map((cat, di) => {
         const colorRgb = DEST_GROUP_COLORS[di % DEST_GROUP_COLORS.length];
         const catGroup = TopBar.addGroup(cat.name.toUpperCase(), { color: colorRgb, collapsed: true });
-        return addDestinationTree('Destinations/' + cat.href, catGroup, colorRgb);
+        return addDestinationTree('Routes/Destinations/' + cat.href, catGroup, colorRgb);
     }));
 
     // ===== SOURCES — draggable signals fed into destination twists =====

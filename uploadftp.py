@@ -6,7 +6,8 @@ import ftplib
 
 # Roots whose folders get an index.json manifest so the web app can discover the
 # tree on any static host (no server-side directory listing required).
-MANIFEST_ROOTS = ['Sources', 'Destinations']
+# Sources/ and Destinations/ now live under Routes/.
+MANIFEST_ROOTS = ['Routes']
 
 def write_manifest(dirpath):
     """Write index.json listing this folder's immediate children (dirs end '/')."""
@@ -161,7 +162,7 @@ def upload_to_ftp():
             return 0  # root files (index.htm, *.json at root, ...)
         if rel_path.split('/', 1)[0] == 'js':
             return 1  # js/ and js/editors/...
-        return 2      # the rest (Sources/, Destinations/, ...)
+        return 2      # the rest (Routes/Sources/, Routes/Destinations/, ...)
     to_upload.sort(key=lambda p: (upload_rank(p), p))
 
     print(f"Connecting to FTP server {FTP_HOST} (Explicit FTPS) as {FTP_USER}...")

@@ -13,7 +13,7 @@ function renderProductionInputs(programs, container) {
         audio: ['MAIN MIX', 'MIX MINUS 1', 'MIX MINUS 2', 'MIX MINUS 3', 'MIX MINUS 4'],
         intercom: ['IFB OUT 1', 'IFB OUT 2', 'IFB OUT 3', 'IFB OUT 4'],
     };
-    const slug = (s) => s.replace(/[^a-zA-Z0-9]/g, '-');
+    const slug = slugId;   // shared id-slug helper (js/util/dom.js)
 
     programs.forEach(pgm => {
         const color = pgm.color || '#7CFC00';
@@ -63,11 +63,10 @@ function renderPrograms(programs) {
             : pgm.name;
         // An offline/faulted room pulses red and flags its status in the title.
         const faulted = isFaultStatus(pgm.status);
-        const faultTag = faulted ? ` <span class="fault-tag">⚠ ${pgm.status}</span>` : '';
 
         let html = `
             <div class="program-row${faulted ? ' fault' : ''}" style="--prod-color: ${pgm.color || '#ffaa00'}; position: relative; overflow: hidden; padding: 0; margin-bottom: 10px; flex: 1 1 auto;">
-                <div class="program-title" style="background: ${pgm.color || '#ffaa00'};">${titleText}${faultTag}</div>
+                <div class="program-title" style="background: ${pgm.color || '#ffaa00'};">${titleText}${faulted ? ' ' : ''}${faultTag(pgm.status)}</div>
                 <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding-right: 60px;">
         `;
         

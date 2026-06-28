@@ -32,14 +32,11 @@ function buildPlayoutVideoNode(video, playerName, color, origin) {
         </div>
     `;
 
-    // Colour the stack and its video feed by the playout's colour (with a subtle
-    // per-node shade where shadeColor() is available), matching the video pools.
-    const shade = (typeof shadeColor === 'function') ? shadeColor : (c) => c;
-    node.style.borderColor = shade(color, 0);
-    node.style.color = color;
-    node.style.boxShadow = `0 0 5px ${color}55`;
+    // Colour the stack and its video feed by the playout's colour, matching the
+    // video pools (shared helpers from js/util/color.js).
+    styleSignalNode(node, color);
     const vSub = node.querySelector(`#pool-${vid}-V`);
-    if (vSub) { vSub.style.borderColor = color; vSub.style.color = color; }
+    if (vSub) styleSignalNode(vSub, color);
     node.dataset.status = 'OK';
     return node;
 }

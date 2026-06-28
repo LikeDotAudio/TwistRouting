@@ -13,6 +13,10 @@ function toggleProdOutput(node) {
 function makeNodeDraggable(node) {
     node.draggable = true;
     if (!node.id) node.id = 'swimmer-' + Math.random().toString(36).substr(2, 9);
+    // Idempotent: lazily-rendered pools call initializeDraggables() again, so skip
+    // nodes already wired (otherwise listeners would stack and double-fire).
+    if (node.dataset.dragWired) return;
+    node.dataset.dragWired = '1';
 
     const isProdOutput = node.classList.contains('prod-source') && node.classList.contains('multiplex');
     let holdTimer;
@@ -115,6 +119,8 @@ function initializeDraggables() {
     document.querySelectorAll('.foldable-header').forEach(header => {
         header.draggable = true;
         header.style.cursor = 'grab';
+        if (header.dataset.dragWired) return;   // idempotent across lazy re-renders
+        header.dataset.dragWired = '1';
         header.addEventListener('dragstart', (e) => {
             e.stopPropagation();
             const content = header.nextElementSibling;
