@@ -19,10 +19,10 @@
         const s = document.createElement('style');
         s.id = STYLE_ID;
         s.textContent = `
-        .ds-open{position:fixed;left:14px;bottom:10px;z-index:1000;background:#1a1206;color:#ffd400;
-            border:1px solid #e08a1e;border-radius:50%;width:46px;height:46px;font-size:20px;cursor:pointer;
-            box-shadow:0 0 12px rgba(224,138,30,.4);}
-        .ds-open:hover{background:#ffd400;color:#000;}
+        .ds-open{position:fixed;left:14px;bottom:10px;z-index:1000;background:#e08a1e;color:#000;
+            border:none;border-radius:50%;width:46px;height:46px;font-size:22px;cursor:pointer;
+            box-shadow:0 0 14px rgba(224,138,30,.5),inset 0 0 0 3px #1a1206;}
+        .ds-open:hover{background:#ffd400;}
         .ds-overlay{position:fixed;inset:0;z-index:2700;display:none;align-items:center;justify-content:center;
             background:radial-gradient(circle at 50% 50%,#120c02 0%,#000 75%);}
         .ds-overlay.open{display:flex;}

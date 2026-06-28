@@ -54,10 +54,11 @@
             font-weight:900;letter-spacing:2px;font-size:13px;padding:12px 30px;cursor:pointer;}
         .tut-go:hover{filter:brightness(1.1);}
         /* "ACADEMY" button sits beside the "created by" credit (bottom-right). */
-        .tut-help{position:fixed;right:417px;bottom:10px;z-index:1000;border:none;border-radius:14px;
-            background:var(--tut-color,#FF9C63);color:#000;font-weight:900;letter-spacing:1px;font-size:11px;
-            padding:7px 16px;cursor:pointer;opacity:.92;box-shadow:0 0 10px rgba(0,0,0,.45);white-space:nowrap;}
-        .tut-help:hover{opacity:1;box-shadow:0 0 14px rgba(255,156,99,.6);}
+        .tut-help{position:fixed;right:417px;bottom:10px;z-index:1000;border:none;
+            border-radius:18px 6px 6px 18px;background:var(--tut-color,#FF9C63);color:#000;
+            font-weight:900;letter-spacing:2px;font-size:11px;text-transform:uppercase;
+            padding:8px 18px 8px 16px;cursor:pointer;box-shadow:inset 5px 0 0 #c97a16;white-space:nowrap;}
+        .tut-help:hover{filter:brightness(1.1);}
         `;
         document.head.appendChild(s);
     }

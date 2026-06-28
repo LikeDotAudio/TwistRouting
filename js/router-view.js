@@ -34,10 +34,11 @@ import { updateTwistVisuals } from './visuals.js';
         const s = document.createElement('style');
         s.id = STYLE_ID;
         s.textContent = `
-        .rv-btn{position:fixed;right:14px;bottom:76px;z-index:1000;background:#c0c0c0;color:#000;
-            border:2px solid;border-color:#fff #808080 #808080 #fff;font-family:'MS Sans Serif',Tahoma,sans-serif;
-            font-weight:bold;letter-spacing:1px;padding:7px 14px;cursor:pointer;}
-        .rv-btn:active{border-color:#808080 #fff #fff #808080;}
+        .rv-btn{position:fixed;right:14px;bottom:76px;z-index:1000;background:#3FC1C9;color:#001b1d;
+            border:none;border-radius:18px 6px 6px 18px;font-family:Arial,Helvetica,sans-serif;
+            font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:8px 18px 8px 16px;cursor:pointer;
+            box-shadow:inset 5px 0 0 #2a8b91;}
+        .rv-btn:hover{filter:brightness(1.1);}
         .rv-overlay{position:fixed;inset:0;z-index:2500;display:none;flex-direction:column;
             background:#008080;color:#000;font-family:'MS Sans Serif',Tahoma,Geneva,sans-serif;font-size:12px;}
         .rv-overlay.open{display:flex;}

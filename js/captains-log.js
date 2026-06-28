@@ -129,12 +129,13 @@ import { updateTwistVisuals } from './visuals.js';
         const s = document.createElement('style');
         s.id = STYLE_ID;
         s.textContent = `
-        .cl-btn{position:fixed;right:244px;bottom:42px;z-index:1000;background:#3a2a08;color:#ffcf6b;
-            border:1px solid #ffcf6b;font-family:'Courier New',monospace;font-weight:bold;letter-spacing:1px;
-            padding:7px 12px;border-radius:4px;cursor:pointer;box-shadow:0 0 10px rgba(255,180,60,.25);}
+        .cl-btn{position:fixed;right:244px;bottom:42px;z-index:1000;background:#C2B74B;color:#1a1206;
+            border:none;font-family:'Courier New',monospace;font-weight:900;letter-spacing:2px;text-transform:uppercase;
+            padding:8px 16px 8px 18px;border-radius:6px 18px 18px 6px;cursor:pointer;box-shadow:inset -5px 0 0 #8f8a35;}
+        .cl-btn:hover{filter:brightness(1.1);}
         .cl-btn:hover{background:#ffcf6b;color:#000;}
         .cl-badge{display:inline-block;min-width:16px;margin-left:6px;padding:0 5px;border-radius:8px;
-            background:#ffcf6b;color:#000;font-size:10px;}
+            background:#1a1206;color:#C2B74B;font-size:10px;}
         .cl-panel{position:fixed;top:0;right:0;width:460px;max-width:94vw;height:100%;z-index:2600;
             background:#080a06;color:#ffcf6b;font-family:'Courier New',Courier,monospace;display:flex;
             flex-direction:column;transform:translateX(101%);transition:transform .25s ease;
