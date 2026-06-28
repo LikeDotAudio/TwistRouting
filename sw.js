@@ -10,32 +10,38 @@
 // To ship an update, bump CACHE_VERSION: the new worker re-crawls, then deletes
 // the old cache on activate. Clients pick it up on their next reload.
 
-const CACHE_VERSION = 'twist-v45';
+const CACHE_VERSION = 'twist-v46';
 
-// Static app shell. The static host ignores the ?v= query for files on disk, so
-// these stay valid across version bumps; runtime caching backfills anything new.
+// Static app shell (now native ES modules). The static host ignores the ?v=
+// query for files on disk; runtime caching backfills anything new.
 const SHELL = [
     './',
     './index.htm',
-    './js/globals.js?v=45',
-    './js/poolVideo.js?v=45',
-    './js/poolAudio.js?v=45',
-    './js/visuals.js?v=45',
-    './js/matrix.js?v=45',
-    './js/editors/core.js?v=45',
-    './js/editors/iso-recorder.js?v=45',
-    './js/editors/multi-viewer.js?v=45',
-    './js/editors/vision-mixer.js?v=45',
-    './js/editors/audio-mixer.js?v=45',
-    './js/editors/intercom.js?v=45',
-    './js/dragDrop.js?v=45',
-    './js/touchDrag.js?v=45',
-    './js/productions.js?v=45',
-    './js/poolPlayout.js?v=45',
-    './js/sources.js?v=45',
-    './js/topbar.js?v=45',
-    './js/app.js?v=45',
-    './js/clock.js?v=45',
+    './js/main.js?v=46',
+    './js/util/color.js?v=46',
+    './js/util/palette.js?v=46',
+    './js/util/dom.js?v=46',
+    './js/core/state.js?v=46',
+    './js/ui/makeMediaGroup.js?v=46',
+    './js/globals.js?v=46',
+    './js/poolVideo.js?v=46',
+    './js/poolAudio.js?v=46',
+    './js/visuals.js?v=46',
+    './js/matrix.js?v=46',
+    './js/editors/core.js?v=46',
+    './js/editors/iso-recorder.js?v=46',
+    './js/editors/multi-viewer.js?v=46',
+    './js/editors/vision-mixer.js?v=46',
+    './js/editors/audio-mixer.js?v=46',
+    './js/editors/intercom.js?v=46',
+    './js/dragDrop.js?v=46',
+    './js/touchDrag.js?v=46',
+    './js/productions.js?v=46',
+    './js/poolPlayout.js?v=46',
+    './js/sources.js?v=46',
+    './js/topbar.js?v=46',
+    './js/app.js?v=46',
+    './js/clock.js?v=46',
     './Routes/Sources/index.json',
     './Routes/Destinations/index.json',
 ];

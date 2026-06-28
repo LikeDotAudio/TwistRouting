@@ -1,7 +1,10 @@
+import { styleSignalNode } from './util/color.js';
+import { isFaultStatus } from './globals.js';
+import { faultTag, slugId } from './util/dom.js';
 // AUDIO_POOL_COLORS now lives in js/util/palette.js; styleSignalNode in
 // js/util/color.js (both loaded first).
 
-function populateAudioPool(poolId, prefix, count, extraClass, items, color, status) {
+export function populateAudioPool(poolId, prefix, count, extraClass, items, color, status) {
     const poolGrid = document.getElementById(poolId);
     if (!poolGrid) return;
     poolGrid.innerHTML = '';
@@ -40,7 +43,7 @@ function populateAudioPool(poolId, prefix, count, extraClass, items, color, stat
     }
 }
 
-function renderAudioPool(data, container, color) {
+export function renderAudioPool(data, container, color) {
     const poolColor = color || data.color || '#00ffff';
     const faulted = isFaultStatus(data.status);
     const group = document.createElement('div');

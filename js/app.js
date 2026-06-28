@@ -1,43 +1,19 @@
-// Create a collapsible group (a folder) inside a super-pool, returning the
-// content element that its children should be appended into.
-function makeMediaGroup(container, title, color, depth) {
-    const group = document.createElement('div');
-    group.className = 'input-group media-group';
-
-    const header = document.createElement('div');
-    header.className = 'foldable-header media-group-header';
-    header.style.cssText = `--lcars-color:${color}; background-color:${color}; font-size:11px; margin-bottom:6px; font-weight:bold; cursor:pointer; margin-left:${depth * 10}px;`;
-    header.innerHTML = `<span>${title}</span><span class="fold-icon" style="transform:rotate(-90deg);display:inline-block;transition:transform .2s;">▼</span>`;
-
-    const content = document.createElement('div');
-    content.className = 'media-group-content';
-    // A vertical bar in the group's colour runs down the left of the children
-    // (which are pushed to the right), showing they belong to this group and
-    // extending downward for the whole length of the expanded children.
-    content.style.cssText = `display:none; margin:4px 0 12px ${depth * 12 + 12}px; padding:6px 0 6px 16px; border-left:4px solid ${color}; box-shadow:-1px 0 8px ${color}66; border-radius:0 0 0 8px;`;
-
-    // Self-contained toggle (not the pool accordion) so nested folders fold
-    // independently of the stage-box pools inside them.
-    header.addEventListener('click', () => {
-        const opening = content.style.display === 'none';
-        content.style.display = opening ? '' : 'none';
-        const icon = header.querySelector('.fold-icon');
-        if (icon) icon.style.transform = opening ? 'rotate(0deg)' : 'rotate(-90deg)';
-    });
-
-    group.appendChild(header);
-    group.appendChild(content);
-    container.appendChild(group);
-    return content;
-}
-
-// DEST_TAB_COLORS / DEST_GROUP_COLORS now live in js/util/palette.js.
+// js/app.js — application bootstrap / composition root.
+import { TopBar } from './topbar.js';
+import { fetchJSON, listDirectory, initSidebarResizer } from './globals.js';
+import { renderPrograms } from './productions.js';
+import { initializeTwists } from './matrix.js';
+import { initializeDraggables } from './dragDrop.js';
+import { renderSourcesPanel } from './sources.js';
+import { DEST_TAB_COLORS, DEST_GROUP_COLORS } from './util/palette.js';
+import { openFromHash, notifyRendered } from './editors/core.js';
+// makeMediaGroup moved to js/ui/makeMediaGroup.js.
 
 // Populate a destination category (CONTROL ROOMS, FLOORS, …) from a folder:
 // subfolders become nested collapsible groups, *.json files become tabs. Each
 // tab gets a distinct colour and remembers its immediate folder as parentName,
 // so the title reads e.g. "MAIN — PROD 1" or "1ST FLOOR — ROOM 1".
-async function addDestinationTree(baseUrl, parentGroup, groupColorRgb, parentName) {
+export async function addDestinationTree(baseUrl, parentGroup, groupColorRgb, parentName) {
     const { dirs, files } = await listDirectory(baseUrl);
 
     if (files.length) {
@@ -57,8 +33,8 @@ async function addDestinationTree(baseUrl, parentGroup, groupColorRgb, parentNam
                     if (parentName) data.parentName = parentName;
                     data.color = color;
                     renderPrograms([data]);             // fills #tab-<id>
-                    if (typeof initializeTwists === 'function') initializeTwists();
-                    if (window.Editors && Editors.notifyRendered) Editors.notifyRendered();
+                    initializeTwists();
+                    notifyRendered();
                 },
             });
         });
@@ -72,7 +48,7 @@ async function addDestinationTree(baseUrl, parentGroup, groupColorRgb, parentNam
     }));
 }
 
-async function initApp() {
+export async function initApp() {
     const tabsContainer = document.getElementById('production-tabs');
     const contentContainer = document.getElementById('production-content');
     TopBar.init(tabsContainer, contentContainer);
@@ -102,7 +78,7 @@ async function initApp() {
 
     // Deep link: if the URL is #/<production>/<editor>, open that editor now that
     // every twist exists in the DOM (e.g. /#/primary-prod-3/intercom).
-    if (window.Editors && Editors.openFromHash) Editors.openFromHash();
+    openFromHash();
 }
 
 // Force every (lazy) destination tab to load its content. Only used to resolve a

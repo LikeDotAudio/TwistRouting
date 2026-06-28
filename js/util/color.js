@@ -4,7 +4,7 @@
 // real ES-module exports in Phase 2.
 
 // Shift a #rrggbb colour's lightness by amt (-100..100) for subtle per-node variation.
-function shadeColor(hex, amt) {
+export function shadeColor(hex, amt) {
     const m = /^#?([0-9a-fA-F]{6})$/.exec(hex || '');
     if (!m) return hex;
     const num = parseInt(m[1], 16);
@@ -17,7 +17,7 @@ function shadeColor(hex, amt) {
 // Apply the standard LCARS signal-node tint (border + text + soft glow).
 // Replaces the byte-identical styleVideoNode / styleAudioNode and the inlined
 // copy that lived in poolPlayout.js.
-function styleSignalNode(node, color) {
+export function styleSignalNode(node, color) {
     node.style.borderColor = color;
     node.style.color = color;
     node.style.boxShadow = `0 0 5px ${color}55`;

@@ -1,4 +1,5 @@
-function getDNAHtml(cycles, width, colors) {
+import { isFaultStatus } from './globals.js';
+export function getDNAHtml(cycles, width, colors) {
     let svgContent = '';
     const amplitude = 35;
     const freq = (cycles * 2 * Math.PI) / (width - 20);
@@ -51,7 +52,7 @@ function getDNAHtml(cycles, width, colors) {
     return svgContent;
 }
 
-function updateTwistVisuals(twist) {
+export function updateTwistVisuals(twist) {
     const dropZone = twist.querySelector('.drop-zone');
     if (!dropZone) return;
     
@@ -139,10 +140,13 @@ function updateTwistVisuals(twist) {
 }
 
 // Toggle the DNA strand folded/unfolded when the twist's right lip is clicked.
-function toggleHelix(event, lip) {
+export function toggleHelix(event, lip) {
     event.stopPropagation();
     const twist = lip.closest('.twist-container');
     if (!twist) return;
     twist.classList.toggle('helix-folded');
     updateTwistVisuals(twist);
 }
+
+// Inline onclick="toggleHelix(...)" in twist markup resolves against window.
+window.toggleHelix = toggleHelix;

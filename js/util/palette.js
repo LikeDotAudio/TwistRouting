@@ -4,7 +4,7 @@
 // (DEST_TAB_COLORS / DEST_GROUP_COLORS). Globals for now; ES-module exports later.
 
 // Per-audio-pool / per-group fill palette (also used for source sub-group colour).
-const AUDIO_POOL_COLORS = [
+export const AUDIO_POOL_COLORS = [
     '#FF9C00', // amber
     '#3786FF', // azure
     '#87EEFF', // cyan
@@ -18,10 +18,10 @@ const AUDIO_POOL_COLORS = [
 ];
 
 // LCARS spine colours handed to each top-level source super-pool, by order.
-const SOURCE_POOL_COLORS = ['#CC99CC', '#FF9C63', '#646DCC', '#3FC1C9', '#C67825', '#78A05A'];
+export const SOURCE_POOL_COLORS = ['#CC99CC', '#FF9C63', '#646DCC', '#3FC1C9', '#C67825', '#78A05A'];
 
 // Distinct colours for destination tabs (each tab's tab + content L-bar match).
-const DEST_TAB_COLORS = ['#9C6B9C', '#3786FF', '#5CB8C4', '#D45F10', '#C2B74B', '#97587B', '#46A06E', '#C19880'];
+export const DEST_TAB_COLORS = ['#9C6B9C', '#3786FF', '#5CB8C4', '#D45F10', '#C2B74B', '#97587B', '#46A06E', '#C19880'];
 
 // Destination category group colours, as "r,g,b" strings (TopBar group spines).
-const DEST_GROUP_COLORS = ['100,109,204', '160,110,180', '255,51,102', '63,193,201', '198,120,37', '120,160,90'];
+export const DEST_GROUP_COLORS = ['100,109,204', '160,110,180', '255,51,102', '63,193,201', '198,120,37', '120,160,90'];

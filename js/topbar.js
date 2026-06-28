@@ -1,3 +1,4 @@
+import { switchTab } from './globals.js';
 // js/topbar.js
 // LCARS-styled top navigation bar (production + encoder tabs).
 // Self-contained module: injects its own styles and renders the tab strip
@@ -269,3 +270,6 @@
 
     window.TopBar = TopBar;
 })();
+
+// ES-module export (the IIFE above also assigns window.TopBar for any inline use).
+export const TopBar = window.TopBar;

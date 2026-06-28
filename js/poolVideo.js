@@ -1,6 +1,9 @@
+import { shadeColor, styleSignalNode } from './util/color.js';
+import { isFaultStatus } from './globals.js';
+import { faultTag } from './util/dom.js';
 // shadeColor + styleSignalNode now live in js/util/color.js (loaded first).
 
-function populateVideoPool(poolId, prefix, count, extraClass, color, status) {
+export function populateVideoPool(poolId, prefix, count, extraClass, color, status) {
     const pool = document.getElementById(poolId);
     if (!pool) return;
     pool.innerHTML = '';
@@ -43,7 +46,7 @@ function populateVideoPool(poolId, prefix, count, extraClass, color, status) {
     }
 }
 
-function renderVideoPool(data, container) {
+export function renderVideoPool(data, container) {
     const faulted = isFaultStatus(data.status);
     const group = document.createElement('div');
     group.className = 'input-group';

@@ -1,3 +1,6 @@
+import { styleSignalNode } from './util/color.js';
+import { makeMediaGroup } from './ui/makeMediaGroup.js';
+
 // Render each Playout as its own collapsible pool, mirroring the VIDEO / AUDIO
 // stage-box pools. A playout holds PLAYERS; each player holds VIDEOS; each video
 // is a multiplex "stack" of one video feed plus four audio feeds — exactly the
@@ -8,7 +11,7 @@
 //   { id, name, color, players:[ { id, name, videos:[ { id, name,
 //       stack:{ video:"V1", audio:["A1","A2","A3","A4"] } } ] } ] }
 
-function buildPlayoutVideoNode(video, playerName, color, origin) {
+export function buildPlayoutVideoNode(video, playerName, color, origin) {
     const vid = video.id;
     const vLabel = (video.stack && video.stack.video) || 'V';
     const audio = (video.stack && Array.isArray(video.stack.audio) && video.stack.audio.length)
@@ -41,7 +44,7 @@ function buildPlayoutVideoNode(video, playerName, color, origin) {
     return node;
 }
 
-function renderPlayoutPool(data, container) {
+export function renderPlayoutPool(data, container) {
     if (!container || !data) return;
     const color = data.color || '#646DCC';
     const players = Array.isArray(data.players) ? data.players : [];
@@ -61,9 +64,7 @@ function renderPlayoutPool(data, container) {
     players.forEach(player => {
         // Each player is a nested collapsible group inside the playout pool.
         const origin = `${data.name} — ${player.name}`;
-        const playerContent = (typeof makeMediaGroup === 'function')
-            ? makeMediaGroup(content, player.name, color, 0)
-            : content;
+        const playerContent = makeMediaGroup(content, player.name, color, 0);
         const grid = document.createElement('div');
         grid.className = 'input-grid-video';
         (player.videos || []).forEach(video => {

@@ -255,3 +255,19 @@
     // Open from the URL on load (once twists exist) and on manual hash changes.
     window.addEventListener('hashchange', openFromHash);
 })();
+
+// ES-module exports — re-exposed from the window.Editors registry the IIFE built,
+// so editor modules and matrix/app can import them directly.
+export const register = window.Editors.register;
+export const addStyles = window.Editors.addStyles;
+export const open = window.Editors.open;
+export const close = window.Editors.close;
+export const gatherSources = window.Editors.gatherSources;
+export const parseConfig = window.Editors.parseConfig;
+export const channelsFor = window.Editors.channelsFor;
+export const knob = window.Editors.knob;
+export const meterBar = window.Editors.meterBar;
+export const pushTimer = window.Editors.pushTimer;
+export const openForTwist = window.Editors.openForTwist;
+export const openFromHash = window.Editors.openFromHash;
+export const notifyRendered = window.Editors.notifyRendered;

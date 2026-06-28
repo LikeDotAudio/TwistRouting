@@ -1,8 +1,11 @@
+import { state } from './core/state.js';
+import { updateTwistVisuals } from './visuals.js';
+import { openForTwist } from './editors/core.js';
 // Enforce a twist's hard input limits so a newly added source REPLACES the
 // oldest rather than stacking past the limit. Caps applied: maxVideo (video
 // sources), maxAudio (audio sources), and a total cap equal to the number of
 // defined inputs (config.inputs.length).
-function enforceTwistLimits(dropZone, config, child) {
+export function enforceTwistLimits(dropZone, config, child) {
     if (!config) return;
     const isVideo = child.classList.contains('video');
     const isAudio = child.classList.contains('audio');
@@ -24,7 +27,7 @@ function enforceTwistLimits(dropZone, config, child) {
 // Build one collapsible "where it came from" chip from a set of source nodes:
 // shows "<origin> ×N" and expands to the individual feeds. Used for multiplex
 // boxes and for same-origin plain sources (e.g. STAGEBOX 202's CH 1-12).
-function buildDroppedGroup(groupName, groupColor, sourceNodes) {
+export function buildDroppedGroup(groupName, groupColor, sourceNodes) {
     const group = document.createElement('div');
     group.className = 'signal-node dropped-group';
     group.style.borderColor = groupColor;
@@ -56,7 +59,7 @@ function buildDroppedGroup(groupName, groupColor, sourceNodes) {
     return group;
 }
 
-function initializeTwists() {
+export function initializeTwists() {
     document.querySelectorAll('.twist-container').forEach(twist => {
         if (twist.dataset.initialized) return;
         twist.dataset.initialized = 'true';
@@ -181,12 +184,12 @@ function initializeTwists() {
     });
 }
 
-function openTwistModal(twistElement) {
+export function openTwistModal(twistElement) {
     // Role-specific twists (Video Mixer, Multi Viewer, Audio Mixer, Intercom, ISO)
     // open their own full-screen editor; everything else uses the matrix below.
-    if (window.Editors && Editors.openForTwist(twistElement)) return;
+    if (openForTwist(twistElement)) return;
 
-    currentTwist = twistElement;
+    state.currentTwist = twistElement;
     const title = twistElement.querySelector('.twist-title').innerText;
     document.getElementById('modal-title').innerText = title + " // SWITCHER MATRIX";
     
@@ -299,31 +302,31 @@ function openTwistModal(twistElement) {
     document.getElementById('twist-modal').style.display = 'flex';
 }
 
-function handleMatrixDragStart(e) {
-    matrixDragSrcEl = this;
+export function handleMatrixDragStart(e) {
+    state.matrixDragSrcEl = this;
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/html', this.innerHTML);
     this.classList.add('dragging');
 }
 
-function handleMatrixDragOver(e) {
+export function handleMatrixDragOver(e) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     return false;
 }
 
-function handleMatrixDrop(e) {
+export function handleMatrixDrop(e) {
     e.preventDefault();
-    if (matrixDragSrcEl !== this) {
+    if (state.matrixDragSrcEl !== this) {
         const matrixContainer = document.getElementById('matrix-container');
         const allRows = Array.from(matrixContainer.querySelectorAll('.matrix-row'));
-        const srcIndex = allRows.indexOf(matrixDragSrcEl);
+        const srcIndex = allRows.indexOf(state.matrixDragSrcEl);
         const tgtIndex = allRows.indexOf(this);
         
         if (srcIndex < tgtIndex) {
-            this.after(matrixDragSrcEl);
+            this.after(state.matrixDragSrcEl);
         } else {
-            this.before(matrixDragSrcEl);
+            this.before(state.matrixDragSrcEl);
         }
         
         syncTwistOrder();
@@ -331,30 +334,30 @@ function handleMatrixDrop(e) {
     return false;
 }
 
-function handleMatrixDragEnd(e) {
+export function handleMatrixDragEnd(e) {
     this.classList.remove('dragging');
 }
 
-function handleInputDragStart(e) {
+export function handleInputDragStart(e) {
     e.stopPropagation();
-    inputDragSrcEl = this;
+    state.inputDragSrcEl = this;
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', this.innerText);
     this.style.opacity = '0.5';
 }
 
-function handleInputDragOver(e) {
+export function handleInputDragOver(e) {
     e.preventDefault();
     e.stopPropagation();
     e.dataTransfer.dropEffect = 'move';
     return false;
 }
 
-function handleInputDrop(e) {
+export function handleInputDrop(e) {
     e.preventDefault();
     e.stopPropagation();
-    if (inputDragSrcEl !== this) {
-        const srcIsVideo = inputDragSrcEl.classList.contains('video-input');
+    if (state.inputDragSrcEl !== this) {
+        const srcIsVideo = state.inputDragSrcEl.classList.contains('video-input');
         const tgtIsVideo = this.classList.contains('video-input');
         
         if (srcIsVideo !== tgtIsVideo) {
@@ -364,33 +367,33 @@ function handleInputDrop(e) {
         }
         
         const temp = this.innerText;
-        this.innerText = inputDragSrcEl.innerText;
-        inputDragSrcEl.innerText = temp;
+        this.innerText = state.inputDragSrcEl.innerText;
+        state.inputDragSrcEl.innerText = temp;
         
-        const srcRow = inputDragSrcEl.closest('.matrix-row');
+        const srcRow = state.inputDragSrcEl.closest('.matrix-row');
         const tgtRow = this.closest('.matrix-row');
         const srcSwimmer = document.getElementById(srcRow.dataset.swimmerId);
         const tgtSwimmer = document.getElementById(tgtRow.dataset.swimmerId);
         
-        if (srcSwimmer) srcSwimmer.dataset.switcherInput = inputDragSrcEl.innerText;
+        if (srcSwimmer) srcSwimmer.dataset.switcherInput = state.inputDragSrcEl.innerText;
         if (tgtSwimmer) tgtSwimmer.dataset.switcherInput = this.innerText;
     }
     return false;
 }
 
-function handleInputDragEnd(e) {
+export function handleInputDragEnd(e) {
     e.stopPropagation();
     this.style.opacity = '1';
 }
 
-function removeSwimmer(btnEl, swimmerId) {
+export function removeSwimmer(btnEl, swimmerId) {
     const row = btnEl.closest('.matrix-row');
     row.remove();
     
     const swimmer = document.getElementById(swimmerId);
     if (swimmer) swimmer.remove();
     
-    if (currentTwist) updateTwistVisuals(currentTwist);
+    if (state.currentTwist) updateTwistVisuals(state.currentTwist);
     
     const matrixContainer = document.getElementById('matrix-container');
     if (matrixContainer.children.length === 0) {
@@ -398,9 +401,9 @@ function removeSwimmer(btnEl, swimmerId) {
     }
 }
 
-function syncTwistOrder() {
-    if (!currentTwist) return;
-    const dropZone = currentTwist.querySelector('.drop-zone');
+export function syncTwistOrder() {
+    if (!state.currentTwist) return;
+    const dropZone = state.currentTwist.querySelector('.drop-zone');
     if (!dropZone) return;
     
     const newOrderIds = Array.from(document.querySelectorAll('.matrix-row')).map(row => row.dataset.swimmerId);
@@ -413,14 +416,14 @@ function syncTwistOrder() {
     });
 }
 
-function closeTwistModal() {
+export function closeTwistModal() {
     document.getElementById('twist-modal').style.display = 'none';
-    currentTwist = null;
+    state.currentTwist = null;
 }
 
 // Place a clone of one pool source node into a twist's drop-zone, honoring the
 // twist's accepts / maxVideo / maxAudio config. Returns true if it was placed.
-function placeSourceInTwist(twist, node) {
+export function placeSourceInTwist(twist, node) {
     if (!twist || !node) return false;
     let config = null;
     if (twist.dataset.config) { try { config = JSON.parse(twist.dataset.config); } catch (e) {} }
@@ -451,7 +454,7 @@ function placeSourceInTwist(twist, node) {
 // out to the video twists (monitors), audio feeds to the audio twists (IEMs,
 // foldback) — one feed per twist, cycling through the available feeds. Returns
 // how many feeds were placed.
-function autoPopulateRoom(room, ids) {
+export function autoPopulateRoom(room, ids) {
     const nodes = ids.map(id => document.getElementById(id)).filter(Boolean);
     const video = nodes.filter(n => n.classList.contains('video') && !n.classList.contains('multiplex'));
     const audio = nodes.filter(n => n.classList.contains('audio') && !n.classList.contains('multiplex'));
@@ -475,7 +478,7 @@ function autoPopulateRoom(room, ids) {
 
 // Let a whole program ("super group") be dropped onto a room (not a specific
 // twist) to auto-populate all of its twists at once.
-function initRoomDrops() {
+export function initRoomDrops() {
     document.querySelectorAll('.program-row').forEach(room => {
         if (room.dataset.roomDrop) return;
         room.dataset.roomDrop = '1';
@@ -499,3 +502,6 @@ function initRoomDrops() {
         });
     });
 }
+
+// Inline onclick="removeSwimmer(...)" in the switcher modal resolves against window.
+window.removeSwimmer = removeSwimmer;

@@ -1,6 +1,7 @@
+import { selectedPoolNodes, state } from './core/state.js';
 // Fold a production output open (showing its feeds) accordion-style: opening one
 // closes the others, so only one production output is expanded at a time.
-function toggleProdOutput(node) {
+export function toggleProdOutput(node) {
     const children = node.querySelector('.multiplex-children');
     if (!children) return;
     const willOpen = children.style.display === 'none';
@@ -10,7 +11,7 @@ function toggleProdOutput(node) {
     children.style.display = willOpen ? 'flex' : 'none';
 }
 
-function makeNodeDraggable(node) {
+export function makeNodeDraggable(node) {
     node.draggable = true;
     if (!node.id) node.id = 'swimmer-' + Math.random().toString(36).substr(2, 9);
     // Idempotent: lazily-rendered pools call initializeDraggables() again, so skip
@@ -63,9 +64,9 @@ function makeNodeDraggable(node) {
                 selectedPoolNodes.add(node);
                 node.classList.add('selected');
             }
-        } else if (e.shiftKey && lastClickedNode) {
+        } else if (e.shiftKey && state.lastClickedNode) {
             const allNodes = Array.from(document.querySelectorAll('.input-group .signal-node'));
-            const start = allNodes.indexOf(lastClickedNode);
+            const start = allNodes.indexOf(state.lastClickedNode);
             const end = allNodes.indexOf(node);
             const min = Math.min(start, end);
             const max = Math.max(start, end);
@@ -79,7 +80,7 @@ function makeNodeDraggable(node) {
             selectedPoolNodes.add(node);
             node.classList.add('selected');
         }
-        lastClickedNode = node;
+        state.lastClickedNode = node;
     });
     
     node.addEventListener('dragstart', (e) => {
@@ -111,7 +112,7 @@ function makeNodeDraggable(node) {
     });
 }
 
-function initializeDraggables() {
+export function initializeDraggables() {
     document.querySelectorAll('.input-group .signal-node').forEach(node => {
         makeNodeDraggable(node);
     });

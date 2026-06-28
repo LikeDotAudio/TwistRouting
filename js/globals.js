@@ -1,19 +1,16 @@
-const selectedPoolNodes = new Set();
+// Shared mutable state (selectedPoolNodes, lastClickedNode, currentTwist, …)
+// now lives in js/core/state.js.
 
 // A signal/device is faulted when its status is set and isn't "OK". Faulted
 // items pulse red, and routing one corrupts the destination's DNA strand.
-function isFaultStatus(status) {
+export function isFaultStatus(status) {
     return !!status && String(status).toUpperCase() !== 'OK';
 }
-let lastClickedNode = null;
-let currentTwist = null;
-let matrixDragSrcEl = null;
-let inputDragSrcEl = null;
 
 // Make the sources sidebar resizable via the drag handle ("sash") between it
 // and the main panel. The width is stored on the .container as --sidebar-width
 // and persisted to localStorage.
-function initSidebarResizer() {
+export function initSidebarResizer() {
     const sash = document.getElementById('sidebar-sash');
     const container = document.querySelector('.container');
     const panel = container && container.querySelector('.ingress-panel');
@@ -55,7 +52,7 @@ function initSidebarResizer() {
     } catch (e) { /* ignore storage errors */ }
 }
 
-async function fetchJSON(url) {
+export async function fetchJSON(url) {
     try {
         // no-store bypasses stale browser cache (e.g. an empty copy cached
         // before the file existed), which otherwise yields "Unexpected end of
@@ -85,7 +82,7 @@ async function fetchJSON(url) {
 // — no server-side directory listing required. The manifest is written by
 // uploadftp.py at deploy time. Falls back to parsing the server's autoindex HTML
 // (python -m http.server, nginx autoindex, etc.) when no manifest is present.
-async function listDirectory(url) {
+export async function listDirectory(url) {
     const out = { dirs: [], files: [] };
     const add = (name, isDir, href) => {
         if (!name || name === '.' || name.toLowerCase() === 'index.json') return;
@@ -141,7 +138,7 @@ async function listDirectory(url) {
     return sortAndReturn();
 }
 
-function toggleSuperPool(event, container) {
+export function toggleSuperPool(event, container) {
     // React to a click on THIS container's own title or its spine — but not on a
     // nested child pool's title/spine, which would otherwise bubble up here too.
     const title = event.target.closest('.super-pool-title');
@@ -165,7 +162,7 @@ function toggleSuperPool(event, container) {
     }
 }
 
-function togglePool(headerEl) {
+export function togglePool(headerEl) {
     const content = headerEl.nextElementSibling;
     const icon = headerEl.querySelector('.fold-icon');
     const isOpening = content.style.display === 'none';
@@ -189,7 +186,7 @@ function togglePool(headerEl) {
     }
 }
 
-function switchTab(tabId, event) {
+export function switchTab(tabId, event) {
     document.querySelectorAll('.tab, .lcars-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => {
         c.style.display = '';   // let the CSS class control visibility/layout
@@ -204,10 +201,15 @@ function switchTab(tabId, event) {
 
 // Toggle an ISO recorder's RECORD button between RECORD and STOP, showing a
 // "RECORDING..." indicator while armed.
-function toggleRecord(event, btn) {
+export function toggleRecord(event, btn) {
     event.stopPropagation();
     const recording = btn.classList.toggle('recording');
     btn.innerText = recording ? 'STOP' : 'RECORD';
     const indicator = btn.parentElement.querySelector('.recording-indicator');
     if (indicator) indicator.style.display = recording ? 'inline' : 'none';
 }
+
+// Inline onclick="togglePool(...)" / onclick="toggleRecord(...)" in HTML strings
+// resolve against window, so keep these reachable there under ES modules.
+window.togglePool = togglePool;
+window.toggleRecord = toggleRecord;

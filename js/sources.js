@@ -3,15 +3,21 @@
 // rendered into its own super-pool, and every *.json leaf is dispatched to the
 // right pool renderer based on the SHAPE of its own data (not its folder name),
 // so dropping a new category/folder/file in makes it appear with zero code edits.
-
-// Palettes (SOURCE_POOL_COLORS, AUDIO_POOL_COLORS) live in js/util/palette.js.
+import { listDirectory, fetchJSON, toggleSuperPool } from './globals.js';
+import { AUDIO_POOL_COLORS, SOURCE_POOL_COLORS } from './util/palette.js';
+import { makeMediaGroup } from './ui/makeMediaGroup.js';
+import { initializeDraggables } from './dragDrop.js';
+import { renderPlayoutPool } from './poolPlayout.js';
+import { renderProductionInputs } from './productions.js';
+import { renderAudioPool } from './poolAudio.js';
+import { renderVideoPool } from './poolVideo.js';
 
 // Decide how a leaf renders purely from what's in the JSON:
 //   players[]              -> playout  (players → videos → video+4-audio stacks)
 //   outputs{}              -> productions (video/audio/intercom output feeds)
 //   items[] / extraClass~audio -> audio pool
 //   otherwise              -> video pool (multiplex stage box)
-function inferPoolKind(data) {
+export function inferPoolKind(data) {
     if (!data || typeof data !== 'object') return 'video';
     if (Array.isArray(data.players)) return 'playout';
     if (data.outputs && typeof data.outputs === 'object') return 'productions';
@@ -20,17 +26,17 @@ function inferPoolKind(data) {
     return 'video';
 }
 
-function renderSourceLeaf(data, container, kind, color) {
-    if (kind === 'playout' && typeof renderPlayoutPool === 'function') return renderPlayoutPool(data, container);
-    if (kind === 'productions' && typeof renderProductionInputs === 'function') return renderProductionInputs([data], container);
-    if (kind === 'audio' && typeof renderAudioPool === 'function') return renderAudioPool(data, container, color);
-    if (typeof renderVideoPool === 'function') return renderVideoPool(data, container);
+export function renderSourceLeaf(data, container, kind, color) {
+    if (kind === 'playout') return renderPlayoutPool(data, container);
+    if (kind === 'productions') return renderProductionInputs([data], container);
+    if (kind === 'audio') return renderAudioPool(data, container, color);
+    return renderVideoPool(data, container);
 }
 
 // Recursively render a category: *.json leaves become pools, subfolders become
 // nested collapsible groups. Identical for every category — the leaf shape, read
 // at render time, picks the renderer.
-async function renderSourceTree(baseUrl, container, depth, inheritColor, parentLabel) {
+export async function renderSourceTree(baseUrl, container, depth, inheritColor, parentLabel) {
     const { dirs, files } = await listDirectory(baseUrl);
 
     // Fetch this folder's leaf files concurrently, then render them in order.
@@ -57,7 +63,7 @@ async function renderSourceTree(baseUrl, container, depth, inheritColor, parentL
             loaded = true;
             await renderSourceTree(baseUrl + d.href, content, depth + 1, groupColor, d.name);
             // Wire the freshly-rendered pool nodes for drag (mouse + touch).
-            if (typeof initializeDraggables === 'function') initializeDraggables();
+            initializeDraggables();
         };
         if (header) header.addEventListener('click', load);
     });
@@ -65,7 +71,7 @@ async function renderSourceTree(baseUrl, container, depth, inheritColor, parentL
 
 // Create a super-pool shell (LCARS spine + foldable title) and return its content
 // element. Mirrors the markup toggleSuperPool() expects.
-function buildSuperPool(panel, name, color) {
+export function buildSuperPool(panel, name, color) {
     const container = document.createElement('div');
     container.className = 'super-pool-container';
     container.style.setProperty('--lcars-color', color);
@@ -82,7 +88,7 @@ function buildSuperPool(panel, name, color) {
 
 // Entry point: read Sources/index.json and build a super-pool per category, in
 // manifest order. Reorder the manifest to reorder the panel — no code change.
-async function renderSourcesPanel(panel) {
+export async function renderSourcesPanel(panel) {
     if (!panel) return;
     const { dirs } = await listDirectory('Routes/Sources/');
     // Build the super-pools in manifest order, then fill them in parallel.

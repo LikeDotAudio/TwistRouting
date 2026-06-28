@@ -1,7 +1,8 @@
+import { register, addStyles, channelsFor, gatherSources, knob, meterBar, pushTimer } from './core.js';
 // js/editors/multi-viewer.js
 (function () {
     'use strict';
-    const { register, addStyles, channelsFor, gatherSources, knob, meterBar, pushTimer } = window.Editors;
+    // helpers imported at module top from ./core.js
 
     addStyles('twist-editor-multi-viewer', `
         /* ===== Multi viewer ===== */

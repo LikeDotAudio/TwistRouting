@@ -1,7 +1,8 @@
+import { register, addStyles, channelsFor, gatherSources, knob, meterBar, pushTimer } from './core.js';
 // js/editors/iso-recorder.js
 (function () {
     'use strict';
-    const { register, addStyles, channelsFor, gatherSources, knob, meterBar, pushTimer } = window.Editors;
+    // helpers imported at module top from ./core.js
 
     addStyles('twist-editor-iso-recorder', `
         /* ===== ISO recorder + instant replay ===== */

@@ -1,9 +1,12 @@
+import { isFaultStatus } from './globals.js';
+import { slugId, faultTag } from './util/dom.js';
+import { initializeTwists, initRoomDrops } from './matrix.js';
 // Render each production as its own collapsible pool ("super group"), exactly
 // like the VIDEO/AUDIO stage-box pools. The pool's foldable header is made
 // draggable by initializeDraggables(), so dragging the whole program carries all
 // its output feeds at once — drop it on a single twist, or on a floor room to
 // auto-populate that room's monitors / IEMs / foldback.
-function renderProductionInputs(programs, container) {
+export function renderProductionInputs(programs, container) {
     if (!container) return;
 
     // A production's outputs are defined in its OWN JSON (outputs.video / .audio /
@@ -48,7 +51,7 @@ function renderProductionInputs(programs, container) {
     });
 }
 
-function renderPrograms(programs) {
+export function renderPrograms(programs) {
     const twists = ['Processing', 'Recording', 'Switcher', 'Audio Mixer', 'Intercom'];
     
     programs.forEach(pgm => {
@@ -125,10 +128,6 @@ function renderPrograms(programs) {
         container.innerHTML = html;
     });
     
-    if (typeof initializeTwists === 'function') {
-        initializeTwists();
-    }
-    if (typeof initRoomDrops === 'function') {
-        initRoomDrops();
-    }
+    initializeTwists();
+    initRoomDrops();
 }
