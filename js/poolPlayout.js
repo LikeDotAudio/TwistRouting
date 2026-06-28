@@ -40,6 +40,9 @@ export function buildPlayoutVideoNode(video, playerName, color, origin) {
     styleSignalNode(node, color);
     const vSub = node.querySelector(`#pool-${vid}-V`);
     if (vSub) styleSignalNode(vSub, color);
+    // Tag every feed with the box origin (like the video pools do) so routed
+    // feeds carry a stable origin for the router matrix and de-dup.
+    node.querySelectorAll('.sub-stream').forEach(s => { s.dataset.origin = origin; });
     node.dataset.status = 'OK';
     return node;
 }
