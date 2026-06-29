@@ -1,11 +1,11 @@
 // js/editors/camera/styles.js — all CSS for the CCU/RCP console.
 export const CSS = `
-.cc-wrap{display:grid;grid-template-columns:minmax(0,1fr) 470px;grid-template-rows:minmax(0,1fr) auto;gap:16px;height:100%;}
+.cc-wrap{display:grid;grid-template-columns:minmax(0,1fr) 580px;grid-template-rows:minmax(0,1fr) auto;gap:12px;height:100%;}
 
 /* ---- the glass (everything overlaid) ---- */
 .cc-glass{grid-column:1;grid-row:1;position:relative;background:#03060f;border:1px solid #1d2942;border-radius:12px;overflow:hidden;min-height:320px;}
 /* the "video" is a true 1:1 square, centred, with the scopes/maps overlaid on it */
-.cc-video{position:absolute;top:0;bottom:130px;left:50%;transform:translateX(-50%);aspect-ratio:1/1;overflow:hidden;background:#03060f;box-shadow:0 0 0 1px #11203a;}
+.cc-video{position:absolute;top:0;bottom:10px;left:50%;transform:translateX(-50%);aspect-ratio:1/1;overflow:hidden;background:#03060f;box-shadow:0 0 0 1px #11203a;}
 .cc-scene{position:absolute;inset:0;transition:filter .12s;}
 .cc-scene::before{content:'';position:absolute;inset:0;
     background:
@@ -16,7 +16,7 @@ export const CSS = `
     box-shadow:0 8px 24px rgba(0,0,0,.5);transition:left .1s linear;}
 .cc-subject::after{content:'';position:absolute;left:50%;top:-30px;transform:translateX(-50%);width:40px;height:40px;border-radius:50%;background:#e7b48a;}
 /* Colour bars: the largest 1:1 square that fits (full height), centred */
-.cc-smpte{position:absolute;top:0;bottom:130px;left:50%;transform:translateX(-50%);aspect-ratio:1/1;display:none;z-index:1;}
+.cc-smpte{position:absolute;top:0;bottom:10px;left:50%;transform:translateX(-50%);aspect-ratio:1/1;display:none;z-index:1;}
 .cc-smpte.on{display:block;} .cc-smpte canvas{width:100%;height:100%;display:block;}
 /* the bouncing DVD-style lineage badge (parent › child › grandchild) — big & fast */
 .cc-dvd{position:absolute;left:0;top:0;display:none;padding:12px 22px;border:3px solid currentColor;border-radius:10px;
@@ -29,23 +29,33 @@ export const CSS = `
 .cc-rec.on{display:block;animation:ccBlink 1s steps(2) infinite;}
 @keyframes ccBlink{50%{opacity:.2;}}
 
-/* RGB PARADE waveform monitor — overlaid at the bottom */
-.cc-wf{position:absolute;left:0;right:0;bottom:0;height:130px;background:rgba(0,6,12,.66);border-top:1px solid #1d3354;z-index:3;}
-.cc-wf-tag{position:absolute;left:30px;bottom:110px;z-index:4;font:bold 10px 'Courier New',monospace;letter-spacing:2px;color:#6FC8F0;}
-.cc-vec{position:absolute;right:10px;top:26px;width:160px;height:160px;border-radius:50%;
-    background:radial-gradient(circle,rgba(0,0,0,.5),rgba(0,0,0,.85));border:1px solid #2c3e5e;z-index:4;}
+/* ---- LEFT-docked scopes: vectorscope (top) + RGB-parade waveform (bottom).
+   Each is a resizable box; the corner handle (.cc-rsz) grows it, and the canvas
+   redraws to its new client size every frame. ---- */
+.cc-scope{position:absolute;z-index:4;}
+.cc-vecbox{left:10px;top:30px;width:172px;height:172px;}
+.cc-vec{display:block;width:100%;height:100%;border-radius:50%;
+    background:radial-gradient(circle,rgba(0,0,0,.5),rgba(0,0,0,.85));border:1px solid #2c3e5e;}
+.cc-wfbox{left:10px;bottom:10px;width:330px;height:150px;background:rgba(0,6,12,.72);
+    border:1px solid #1d3354;border-radius:9px;overflow:hidden;}
+.cc-wf{display:block;width:100%;height:100%;}
+.cc-wf-tag{position:absolute;left:10px;top:6px;z-index:2;font:bold 10px 'Courier New',monospace;letter-spacing:2px;color:#6FC8F0;pointer-events:none;}
+.cc-rsz{position:absolute;right:2px;bottom:2px;width:18px;height:18px;cursor:nwse-resize;z-index:6;touch-action:none;
+    background:repeating-linear-gradient(135deg,transparent 0 3px,#6FC8F0 3px 4px);border-radius:0 0 8px 0;opacity:.65;}
+.cc-rsz:hover{opacity:1;}
 
-/* robotics maps — translucent overlays */
-.cc-map{position:absolute;left:10px;z-index:4;border:1px solid rgba(111,200,240,.32);border-radius:8px;overflow:hidden;background:rgba(3,9,18,.5);}
+/* robotics maps (camera visualization) — translucent overlays, docked RIGHT */
+.cc-map{position:absolute;right:10px;z-index:4;border:1px solid rgba(111,200,240,.32);border-radius:8px;overflow:hidden;background:rgba(3,9,18,.5);}
 .cc-map.top{top:30px;width:216px;height:150px;} .cc-map.side{top:190px;width:216px;height:118px;}
 .cc-map .lbl{position:absolute;left:7px;top:4px;z-index:2;font:bold 8px 'Courier New',monospace;letter-spacing:1px;color:#6FC8F0;}
 .cc-map svg{width:100%;height:100%;}
 
 /* ---- right rail ---- */
-.cc-rail{grid-column:2;grid-row:1;display:flex;flex-direction:column;gap:14px;overflow:auto;padding-right:4px;}
-.cc-card{background:#0a1326;border:1px solid #1d2942;border-radius:12px;padding:16px;}
-.cc-card h4{margin:0 0 12px;color:#6FC8F0;font-size:13px;letter-spacing:2px;text-transform:uppercase;}
-.cc-knobs{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+.cc-rail{grid-column:2;grid-row:1;display:flex;flex-direction:column;gap:10px;overflow:auto;padding-right:2px;}
+.cc-card{background:#0a1326;border:1px solid #1d2942;border-radius:12px;padding:8px 14px;}
+.cc-card h4{margin:0 0 8px;color:#6FC8F0;font-size:13px;letter-spacing:2px;text-transform:uppercase;}
+.cc-knobs{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+.cc-knobs .cc-dial{width:66px;height:66px;}
 .cc-kn{display:flex;flex-direction:column;align-items:center;gap:6px;}
 
 /* motorized rotary encoder: notched bezel, glowing value arc, metallic cap, lit pointer */
@@ -61,17 +71,17 @@ export const CSS = `
 .cc-kn span{font-size:11px;color:#9fb6cc;letter-spacing:.5px;text-align:center;} .cc-kn b{font:bold 13px 'Courier New',monospace;color:#cfe6ff;}
 
 /* RGB Venn: spread gains form the outer triangle, blacks cluster in the middle */
-.cc-venn{position:relative;width:380px;height:350px;margin:16px auto 4px;}
+.cc-venn{position:relative;width:360px;height:212px;margin:4px auto 2px;}
 .cc-venn-bg{position:absolute;inset:0;pointer-events:none;}
 .cc-venn-bg span{position:absolute;width:210px;height:210px;border-radius:50%;mix-blend-mode:screen;opacity:.4;filter:blur(4px);}
-.cc-venn-bg .r{background:#ff2d2d;left:-5px;top:5px;} .cc-venn-bg .g{background:#1fd83a;left:175px;top:5px;} .cc-venn-bg .b{background:#2d6bff;left:85px;top:150px;}
+.cc-venn-bg .r{background:#ff2d2d;left:-10px;top:-45px;} .cc-venn-bg .g{background:#1fd83a;left:160px;top:-45px;} .cc-venn-bg .b{background:#2d6bff;left:75px;top:57px;}
 .cc-venn .slot{position:absolute;transform:translate(-50%,-50%);}
 .cc-venn .slot .cc-dial{width:74px;height:74px;}
 .cc-venn .slot.blk .cc-dial{width:46px;height:46px;}
 .cc-venn .slot .cc-kn{gap:3px;} .cc-venn .slot.blk .cc-kn b,.cc-venn .slot.blk .cc-kn span{font-size:10px;}
 
 /* joystick + sliders */
-.cc-stick{position:relative;width:230px;height:230px;margin:6px auto;border-radius:50%;background:radial-gradient(circle,#16243d,#0a1326);border:3px solid #2c3e5e;touch-action:none;cursor:grab;}
+.cc-stick{position:relative;width:200px;height:200px;margin:4px auto;border-radius:50%;background:radial-gradient(circle,#16243d,#0a1326);border:3px solid #2c3e5e;touch-action:none;cursor:grab;}
 .cc-stick .puck{position:absolute;left:50%;top:50%;width:74px;height:74px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#9fdcff,#3f86b6);box-shadow:0 8px 18px rgba(0,0,0,.6);transform:translate(-50%,-50%);}
 .cc-stick .puck::after{content:'';position:absolute;inset:30%;border-radius:50%;border:2px solid rgba(255,255,255,.35);}
 .cc-stick .ring{position:absolute;inset:20px;border-radius:50%;border:2px dashed #2c3e5e;}
@@ -79,7 +89,7 @@ export const CSS = `
 .cc-jsgrid{display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;gap:14px 12px;align-items:center;justify-items:center;}
 .cc-vside{display:flex;flex-direction:column;align-items:center;gap:8px;}
 .cc-vside label{font-size:13px;font-weight:900;color:#9fb6cc;letter-spacing:2px;}
-.cc-vbar{-webkit-appearance:none;appearance:none;writing-mode:vertical-lr;direction:rtl;width:30px;height:210px;border-radius:16px;background:#16243d;box-shadow:inset 0 0 0 1px #2c3e5e;outline:none;cursor:pointer;}
+.cc-vbar{-webkit-appearance:none;appearance:none;writing-mode:vertical-lr;direction:rtl;width:30px;height:184px;border-radius:16px;background:#16243d;box-shadow:inset 0 0 0 1px #2c3e5e;outline:none;cursor:pointer;}
 .cc-vbar::-webkit-slider-thumb{-webkit-appearance:none;width:42px;height:34px;border-radius:9px;background:radial-gradient(circle at 40% 35%,#9fdcff,#3f86b6);border:2px solid #001019;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.5);}
 .cc-vbar::-moz-range-thumb{width:42px;height:34px;border-radius:9px;background:radial-gradient(circle at 40% 35%,#9fdcff,#3f86b6);border:2px solid #001019;cursor:pointer;}
 .cc-dollybar{grid-column:1 / -1;width:100%;display:flex;align-items:center;gap:12px;}
@@ -93,7 +103,7 @@ export const CSS = `
 .cc-key{padding:16px 6px;border-radius:10px;border:1px solid #2c3e5e;background:#0c1730;color:#bcd3ee;font-size:12px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;cursor:pointer;text-align:center;}
 .cc-key:hover{background:#16243d;} .cc-key.on{background:#6FC8F0;color:#001019;border-color:#6FC8F0;}
 /* telemetry as its own overlaid box on the glass (bottom-left, above waveform) */
-.cc-tel-box{position:absolute;left:10px;bottom:142px;z-index:5;background:rgba(3,9,18,.66);border:1px solid #1d3354;border-radius:9px;padding:10px 13px;min-width:160px;}
+.cc-tel-box{position:absolute;right:10px;bottom:10px;z-index:5;background:rgba(3,9,18,.66);border:1px solid #1d3354;border-radius:9px;padding:10px 13px;min-width:160px;}
 /* glass function buttons */
 .cc-fbtn{position:absolute;z-index:6;padding:13px 20px;border-radius:11px;border:1px solid #2c3e5e;background:rgba(12,23,48,.86);color:#bcd3ee;font:900 13px sans-serif;letter-spacing:2px;text-transform:uppercase;cursor:pointer;user-select:none;}
 .cc-fbtn:hover{background:rgba(22,36,61,.92);}

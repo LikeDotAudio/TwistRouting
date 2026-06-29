@@ -68,7 +68,9 @@
     function nowHours() { try { const d = new Date(); return d.getHours() + d.getMinutes() / 60; } catch (e) { return 14.2; } }
     function show() { ensure(); build(); ov.classList.add('open'); }
 
-    // Clicking the clock opens the schedule.
-    document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('.ptp-clock')) show(); });
+    // Clicking the clock's SECONDS DOTS opens the schedule (the time read-out itself
+    // cycles UTC/Unix/date-timecode — see clock.js). Belt-and-braces with the
+    // listener clock.js wires directly, in case the clock mounted before us.
+    document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('.ck-dots')) show(); });
     window.Schedule = { show, data: SCHEDULE };
 })();

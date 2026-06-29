@@ -77,7 +77,7 @@
             cursor:pointer;font-size:30px;font-weight:bold;line-height:1;color:#000;
             box-shadow:inset 2px 0 0 rgba(0,0,0,.25);}
         .ed-close:hover{background:rgba(0,0,0,.18);}
-        .ed-body{flex:1;min-height:0;overflow:auto;padding:16px 22px 22px;}
+        .ed-body{flex:1;min-height:0;overflow:auto;padding:12px 14px 14px;}
         .ed-h{color:var(--cyan,#00ffff);font-size:11px;font-weight:bold;letter-spacing:2px;
             text-transform:uppercase;margin:0 0 8px;}
         `;

@@ -38,11 +38,12 @@ function render(body, twist) {
           <div class="cc-smpte"><canvas></canvas><div class="cc-dvd"></div></div>
           <div class="cc-osd"></div>
           <div class="cc-rec">● REC</div>
+          <!-- camera ROBOTICS visualization — docked RIGHT -->
           <div class="cc-map top"><div class="lbl">TOP-DOWN · PAN / DOLLY</div>${topSVG()}</div>
           <div class="cc-map side"><div class="lbl">SIDE · TILT / PED</div>${sideSVG()}</div>
-          <canvas class="cc-vec"></canvas>
-          <div class="cc-wf-tag">RGB PARADE · IRE</div>
-          <canvas class="cc-wf"></canvas>
+          <!-- scopes — docked LEFT, each with a drag handle to grow -->
+          <div class="cc-vecbox cc-scope"><canvas class="cc-vec"></canvas><div class="cc-rsz" title="Drag to resize"></div></div>
+          <div class="cc-wfbox cc-scope"><div class="cc-wf-tag">RGB PARADE · IRE</div><canvas class="cc-wf"></canvas><div class="cc-rsz" title="Drag to resize"></div></div>
           <div class="cc-tel-box"><div class="cap">TELEMETRY</div><div class="cc-tel"></div></div>
           <div class="cc-fbtn cc-bars-btn">Color Bars</div>
           <div class="cc-fbtn cc-wb-btn">Auto WB<div class="fill"></div></div>
@@ -79,6 +80,31 @@ function render(body, twist) {
     const scene = $('.cc-scene'), subject = $('.cc-subject'), video = $('.cc-video');
     const smpte = $('.cc-smpte canvas'), smpteBox = $('.cc-smpte'), wf = $('.cc-wf'), osd = $('.cc-osd'), vec = $('.cc-vec'), tel = $('.cc-tel');
     const dvd = $('.cc-dvd'); dvd.textContent = lineage;
+
+    // Drag the corner handle to grow a scope. The canvas redraws to its new client
+    // size on the next frame (drawParade / drawVectorscope read clientWidth/Height).
+    function makeResizable(box, handle, opts) {
+        opts = opts || {};
+        let sx, sy, sw, sh;
+        const pt = (e) => e.touches ? e.touches[0] : e;
+        const move = (e) => {
+            const p = pt(e);
+            let w = Math.max(opts.minW || 120, sw + (p.clientX - sx));
+            let h = Math.max(opts.minH || 100, sh + (p.clientY - sy));
+            if (opts.max) { w = Math.min(w, opts.max); h = Math.min(h, opts.max); }
+            if (opts.square) { const m = Math.max(w, h); w = h = m; }
+            box.style.width = w + 'px'; box.style.height = h + 'px';
+        };
+        const up = () => { document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); };
+        handle.addEventListener('pointerdown', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            const r = box.getBoundingClientRect(); sw = r.width; sh = r.height;
+            const p = pt(e); sx = p.clientX; sy = p.clientY;
+            document.addEventListener('pointermove', move); document.addEventListener('pointerup', up);
+        });
+    }
+    makeResizable($('.cc-vecbox'), $('.cc-vecbox .cc-rsz'), { minW: 130, minH: 130, square: true, max: 520 });
+    makeResizable($('.cc-wfbox'), $('.cc-wfbox .cc-rsz'), { minW: 220, minH: 110, max: 640 });
 
     function shade() {
         const s = ctx.S();

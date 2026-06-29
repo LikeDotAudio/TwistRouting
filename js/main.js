@@ -18,6 +18,8 @@ import './editors/lighting.js';
 import './editors/wysiwyg.js';
 import './auth.js';
 import './schedule.js';
+import './mission.js';
+import './dest-glow.js';
 import './clock.js';
 import './touchDrag.js';
 import './tutorial.js';

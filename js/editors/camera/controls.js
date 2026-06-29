@@ -40,13 +40,13 @@ export function buildShading(ctx) {
         slot.style.left = x + 'px'; slot.style.top = y + 'px';
         slot.appendChild(buildDial(ctx, key, label, color)); venn.appendChild(slot);
     };
-    place('rGain', 'R Gain', '#ff4d4d', 100, 105); place('gGain', 'G Gain', '#28e04a', 280, 105); place('bGain', 'B Gain', '#4d83ff', 190, 255);
-    place('rBlk', 'R', '#ff7a7a', 150, 162, true); place('gBlk', 'G', '#74ef8a', 190, 162, true); place('bBlk', 'B', '#86acff', 230, 162, true);
+    place('rGain', 'R Gain', '#ff4d4d', 95, 60); place('gGain', 'G Gain', '#28e04a', 265, 60); place('bGain', 'B Gain', '#4d83ff', 180, 162);
+    place('rBlk', 'R', '#ff7a7a', 146, 110, true); place('gBlk', 'G', '#74ef8a', 180, 110, true); place('bBlk', 'B', '#86acff', 214, 110, true);
 }
 
 export function buildJoystick(ctx) {
     const stick = ctx.$('.cc-stick'), puck = stick.querySelector('.puck');
-    const placePuck = () => { const r = 74; puck.style.left = `calc(50% + ${(ctx.S().pan - 0.5) * 2 * r}px)`; puck.style.top = `calc(50% + ${(0.5 - ctx.S().tilt) * 2 * r}px)`; };
+    const placePuck = () => { const r = 62; puck.style.left = `calc(50% + ${(ctx.S().pan - 0.5) * 2 * r}px)`; puck.style.top = `calc(50% + ${(0.5 - ctx.S().tilt) * 2 * r}px)`; };
     const stickMove = (e) => {
         const r = stick.getBoundingClientRect();
         const px = (e.touches ? e.touches[0].clientX : e.clientX) - r.left - r.width / 2;
