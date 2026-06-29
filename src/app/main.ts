@@ -1,14 +1,18 @@
-// src/app/main.ts — boot of the A.8 side build.
+// src/app/main.ts — boot + composition root of the A.8 side build.
 //
-// P0 walking-skeleton: prove the typed pipeline end-to-end against the SHARED
-// Routes/ data — discover the Destinations tree, load each production, and show
-// which editor each twist dispatches to (via the auto-built registry). No DOM
-// scraping, no window globals; everything flows through typed modules.
+// Discovers the SHARED Routes/ data, lists every production's twists, and opens
+// the dispatched editor in the LCARS overlay with a fully-resolved EditorContext
+// (data-in, M3). No DOM scraping, no window globals — everything flows through
+// typed modules: discovery → registry → context → overlay → plugin.render.
 
 import { listDirectory, fetchJSON } from '../platform/discovery.js';
-import { pluginFor } from '../editors/registry.js';
+import { pluginFor, PLUGINS } from '../editors/registry.js';
 import { isFaultStatus } from '../domain/routing-core/index.js';
-import type { Production, TwistConfig } from '../model/index.js';
+import { openOverlay } from '../platform/overlay.js';
+import { buildContext } from './context.js';
+import type { EditorServices } from '../editors/types.js';
+import type { Production, TwistConfig, Hex } from '../model/index.js';
+import { el } from '../ui/dom.js';
 
 const ROOT = 'Routes/Destinations/';
 
@@ -36,27 +40,74 @@ async function loadProductions(): Promise<Production[]> {
   return prods;
 }
 
+/** Cross-editor services (M1): replaces the legacy window.openStageBox global. */
+const services: EditorServices = {
+  openStageBox(name, color, channels) {
+    openOverlay({ title: name, color, prodName: name, twistName: name }, (body) => {
+      body.innerHTML =
+        `<div class="ed-h">STAGE BOX · ${name}</div>` +
+        `<ul>${channels.map((c) => `<li>${c}</li>`).join('')}</ul>`;
+    });
+  },
+};
+
+/** Open the editor that handles a twist, resolving its context first. */
+function openTwist(prod: Production, twist: string | TwistConfig): void {
+  const name = twistName(twist);
+  const plugin = pluginFor(name);
+  if (!plugin) return;
+  const color = (prod.color ?? '#646DCC') as Hex;
+  openOverlay(
+    { title: `${prod.name} · ${plugin.title}`, color, prodName: prod.name, twistName: name },
+    (body, dispose) => {
+      // Editor-level gating (M6): refuse to render if the role lacks a required cap.
+      const ctx = buildContext(prod, twist, dispose, services);
+      const blocked = (plugin.requiredCaps ?? []).find((c) => !ctx.can(c));
+      if (blocked) {
+        body.innerHTML = `<div class="ed-h">ACCESS DENIED — requires "${blocked}"</div>`;
+        return;
+      }
+      plugin.render(body, ctx);
+    },
+  );
+}
+
 function render(prods: Production[]): void {
   const app = document.getElementById('app');
   if (!app) return;
-  const rows = prods.map((p) => {
-    const twists = (p.twists ?? []).map((t) => {
+  app.innerHTML = `
+    <header><h1>TwistRouting · <small>A.8 side build</small></h1>
+      <p>${prods.length} productions · ${countDispatched(prods)} twists routed to a dedicated editor
+      · ${PLUGINS.length}/13 editors ported · click a twist to open it</p>
+    </header>`;
+  for (const p of prods) {
+    const section = el('section', { class: 'prod', style: `--c:${p.color ?? '#646DCC'}` });
+    section.append(el('h2', { textContent: p.name + (isFaultStatus(p.status) ? ' ⚠' : '') }));
+    const list = el('ul');
+    for (const t of p.twists ?? []) {
       const name = twistName(t);
       const plugin = pluginFor(name);
-      const tag = plugin
-        ? `<span class="ed">${plugin.title}</span>`
-        : `<span class="fallback">matrix fallback</span>`;
-      return `<li>${name} → ${tag}</li>`;
-    }).join('');
-    const fault = isFaultStatus(p.status) ? ' ⚠' : '';
-    return `<section class="prod" style="--c:${p.color ?? '#646DCC'}">
-      <h2>${p.name}${fault}</h2><ul>${twists}</ul></section>`;
-  }).join('');
-
-  app.innerHTML = `
-    <header><h1>TwistRouting · <small>A.8 side build (P0 skeleton)</small></h1>
-      <p>${prods.length} productions discovered · ${countDispatched(prods)} twists routed to a dedicated editor</p>
-    </header>${rows}`;
+      const li = el('li');
+      if (plugin) {
+        const link = el('a', {
+          href: '#',
+          class: 'ed',
+          textContent: `${name} → ${plugin.title}`,
+          style: 'cursor:pointer;text-decoration:none',
+        });
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          openTwist(p, t);
+        });
+        li.append(link);
+      } else {
+        li.append(el('span', { textContent: name }), el('span', { class: 'fallback', textContent: ' → matrix fallback' }));
+      }
+      list.append(li);
+    }
+    section.append(list);
+    app.append(section);
+  }
 }
 
 function countDispatched(prods: Production[]): number {
@@ -65,7 +116,7 @@ function countDispatched(prods: Production[]): number {
   return n;
 }
 
-loadProductions().then(render).catch((e) => {
+loadProductions().then(render).catch((e: unknown) => {
   const app = document.getElementById('app');
   if (app) app.innerHTML = `<pre style="color:#ff6a6a">boot failed: ${String(e)}</pre>`;
 });
