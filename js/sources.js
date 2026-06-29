@@ -13,7 +13,7 @@ import { initializeDraggables } from './dragDrop.js';
 import { renderPlayoutPool } from './poolPlayout.js';
 import { renderProductionInputs } from './productions.js';
 import { renderAudioPool } from './poolAudio.js';
-import { renderVideoPool } from './poolVideo.js';
+import { renderVideoPool, fillVideoCameras } from './poolVideo.js';
 
 // Decide how a leaf renders purely from what's in the JSON:
 //   players[]              -> playout  (players → videos → video+4-audio stacks)
@@ -43,39 +43,72 @@ function injectGangStyles() {
     s.id = 'source-gang-styles';
     s.textContent = `
         .gang-cap{font-size:10px;font-weight:bold;letter-spacing:2px;color:#9fb6cc;margin:2px 0 4px 4px;text-transform:uppercase;}
-        .gang-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:4px;margin:0 0 10px;}
+        .gang-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:4px;margin:0 0 10px;align-items:start;}
         .signal-node.gang-cell{border-radius:3px;padding:0;cursor:grab;display:flex;align-items:center;
             justify-content:center;min-height:34px;background:rgba(0,0,0,.55);}
         .signal-node.gang-cell .multiplex-header{font-size:13px;font-weight:bold;letter-spacing:1px;padding:9px 2px;width:100%;text-align:center;}
         .signal-node.gang-cell .multiplex-children{display:none;flex-direction:column;gap:2px;padding:2px;}
         .signal-node.gang-cell.fault{outline:2px solid #ff3344;}
+        /* Expanded cell spans the WHOLE row — siblings flow above/below it — so its
+           contents (channels / cameras) get the full width. */
+        .signal-node.gang-cell.expanded{grid-column:1 / -1;flex-direction:column;align-items:stretch;justify-content:flex-start;}
+        .signal-node.gang-cell.expanded > .multiplex-children{display:flex;flex-direction:row;flex-wrap:wrap;gap:4px;}
+        .signal-node.gang-cell.expanded .gang-cam-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;width:100%;}
+        .signal-node.gang-cell.expanded > .multiplex-children > .sub-stream{flex:1 1 auto;min-width:60px;}
     `;
     document.head.appendChild(s);
 }
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-// One square draggable cell = a whole stage box (hold to expand its channels).
-function buildGangCell(data, suffix, color) {
+// One square draggable cell = a whole stage box (hold to expand its contents).
+// Audio boxes expand to flat channels; video boxes expand to their camera grid —
+// so SOUND and VIDEO stage-boxes share the exact same compact gang layout.
+function buildGangCell(data, suffix, color, kind) {
     const node = document.createElement('div');
-    node.className = 'signal-node audio multiplex gang-cell';
+    const cellColor = data.color || color;
+    node.className = `signal-node ${kind === 'video' ? 'video' : 'audio'} multiplex gang-cell`;
     node.id = 'pool-' + (data.id || slugId(data.name));
     node.draggable = true;
     node.dataset.origin = data.origin || data.name;
     node.dataset.status = data.status || 'OK';
-    const labels = (data.items && data.items.length)
-        ? data.items
-        : Array.from({ length: data.count || 0 }, (_, i) => `${data.prefix || ''}${String(i + 1).padStart(2, '0')}`);
-    let subs = '';
-    labels.forEach(l => {
-        subs += `<div class="signal-node audio ${data.extraClass || 'audio-studio'} sub-stream" draggable="true" id="pool-${node.id}-${slugId(l)}" data-origin="${data.origin || data.name}">${l}</div>`;
-    });
-    node.innerHTML = `<div class="multiplex-header">${suffix}</div><div class="multiplex-children" style="display:none;">${subs}</div>`;
-    styleSignalNode(node, color);
+
+    const kids = document.createElement('div');
+    kids.className = 'multiplex-children';
+    kids.style.display = 'none';
+    if (kind === 'video') {
+        // Same cameras as the normal video pool, in a grid that fills the row when
+        // the cell is expanded to full width.
+        const grid = document.createElement('div');
+        grid.className = 'input-grid-video gang-cam-grid';
+        fillVideoCameras(grid, data.prefix, data.count, data.extraClass, cellColor, data.status);
+        grid.querySelectorAll('.signal-node').forEach(n => { n.dataset.origin = data.origin || data.name; });
+        kids.appendChild(grid);
+    } else {
+        const labels = (data.items && data.items.length)
+            ? data.items
+            : Array.from({ length: data.count || 0 }, (_, i) => `${data.prefix || ''}${String(i + 1).padStart(2, '0')}`);
+        labels.forEach(l => {
+            const sub = document.createElement('div');
+            sub.className = `signal-node audio ${data.extraClass || 'audio-studio'} sub-stream`;
+            sub.draggable = true;
+            sub.id = `pool-${node.id}-${slugId(l)}`;
+            sub.dataset.origin = data.origin || data.name;
+            sub.textContent = l;
+            kids.appendChild(sub);
+        });
+    }
+
+    const header = document.createElement('div');
+    header.className = 'multiplex-header';
+    header.textContent = suffix;
+    node.appendChild(header);
+    node.appendChild(kids);
+    styleSignalNode(node, cellColor);
     if (isFaultStatus(data.status)) { node.classList.add('fault'); node.querySelectorAll('.sub-stream').forEach(x => x.classList.add('fault')); }
     return node;
 }
 
-function renderGang(container, word, leaves, color) {
+function renderGang(container, word, leaves, color, kind) {
     injectGangStyles();
     const cap = document.createElement('div');
     cap.className = 'gang-cap'; cap.textContent = word; cap.style.color = color;
@@ -86,7 +119,7 @@ function renderGang(container, word, leaves, color) {
     const re = new RegExp('^' + escapeRe(word) + '\\s*', 'i');
     leaves.forEach(d => {
         const suffix = ((d.name || '').replace(re, '').trim()) || d.name;
-        grid.appendChild(buildGangCell(d, suffix, color));
+        grid.appendChild(buildGangCell(d, suffix, color, kind));
     });
 }
 
@@ -101,16 +134,20 @@ export async function renderSourceTree(baseUrl, container, depth, inheritColor, 
     const valid = datas.filter(Boolean);
     valid.forEach(d => { d.origin = parentLabel ? `${parentLabel} — ${d.name}` : d.name; });
 
-    // GANG: audio boxes that share a leading word (STAGEBOX 101, 102, …) collapse
-    // to one square-cell grid (the word as a caption, the numbers as cells).
+    // GANG: audio OR video boxes that share a leading word (STAGEBOX 101, 102, …)
+    // collapse to one square-cell grid (the word as a caption, the numbers as
+    // cells) so SOUND and VIDEO stage-boxes share the same compact layout.
     // Everything else renders as its normal pool, preserving order.
     const order = [];
     const byWord = new Map();
     valid.forEach(d => {
         const kind = inferPoolKind(d);
-        const word = (d.name || '').trim().split(/\s+/)[0] || '';
-        if (kind === 'audio' && word) {
-            if (!byWord.has(word)) { const g = { word, leaves: [] }; byWord.set(word, g); order.push(g); }
+        // The shared key is the leading NON-numeric string (everything before the
+        // first number): "STAGEBOX 101"→"STAGEBOX", "MIX MINUS 1"→"MIX MINUS",
+        // "CAM1"→"CAM". Anything sharing it gangs — not just stage boxes.
+        const word = (d.name || '').replace(/\s*\d.*$/, '').trim();
+        if ((kind === 'audio' || kind === 'video') && word) {
+            if (!byWord.has(word)) { const g = { word, kind, leaves: [] }; byWord.set(word, g); order.push(g); }
             byWord.get(word).leaves.push(d);
         } else order.push({ single: d, kind });
     });
@@ -118,8 +155,8 @@ export async function renderSourceTree(baseUrl, container, depth, inheritColor, 
     order.forEach(g => {
         const color = inheritColor || AUDIO_POOL_COLORS[ci++ % AUDIO_POOL_COLORS.length];
         if (g.single) renderSourceLeaf(g.single, container, g.kind, color);
-        else if (g.leaves.length >= 2) renderGang(container, g.word, g.leaves, color);
-        else renderSourceLeaf(g.leaves[0], container, 'audio', color);
+        else if (g.leaves.length >= 2) renderGang(container, g.word, g.leaves, color, g.kind);
+        else renderSourceLeaf(g.leaves[0], container, g.kind, color);
     });
 
     // Build the nested group headers from the manifest, but DON'T crawl into them
@@ -154,8 +191,9 @@ export function buildSuperPool(panel, name, color) {
     // Start collapsed; the accordion (one open at a time) keeps it that way and
     // renderSourcesPanel opens just the first category.
     container.innerHTML = `
+        <div class="super-pool-emoji">${monoEmoji(name).trim()}</div>
         <div class="super-pool-title foldable-header">
-            <span>${monoEmoji(name)}${stripOrder(name).toUpperCase()}</span><span class="fold-icon" style="transform:rotate(-90deg);display:inline-block;transition:transform .2s;">▼</span>
+            <span>${stripOrder(name).toUpperCase()}</span><span class="fold-icon" style="transform:rotate(-90deg);display:inline-block;transition:transform .2s;">▼</span>
         </div>
         <div class="super-pool-content" style="display:none;"></div>
     `;

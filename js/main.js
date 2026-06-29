@@ -13,6 +13,7 @@ import './touchDrag.js';
 import './tutorial.js';
 import './router-view.js';
 import './captains-log.js';
+import './source-filter.js';
 import './portals.js';
 import './lcars-pulse.js';
 import './dest-selector.js';

@@ -12,9 +12,11 @@ const RULES = [
     [/multiview|monitor|wall|mv\b/i,    '▦'],
     [/vision|switch|cut|me\b|m\/e/i,    '◈'],
     [/record|iso|capture|ingest/i,      '⏺'],
-    [/play|playout|clip|vtr/i,          '▶'],
+    [/\bplay\b|playlist|clip|vtr/i,     '▶'],   // the PLAY super-pool only
     [/cam|camera|video|vid/i,           '■'],
-    [/floor|stage|box|room/i,           '▤'],
+    // Containers of feeds — floors, stageboxes AND playout/player pools — share
+    // the box-grid icon so the PLAY lists read like the VIDEO lists.
+    [/floor|stage|box|room|playout|player/i, '▤'],
     [/prod|program|control|gallery|studio/i, '◆'],
     [/portal/i,                         '◎'],
 ];

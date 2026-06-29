@@ -246,6 +246,25 @@
             border-radius: 2px 16px 16px 2px;
         }
 
+        /* Camera Control signal — a horizontal hexagon (flat top/bottom, pointed
+           left/right). Light blue to set it apart from video (trapezoid) + audio. */
+        .signal-node.camera-control {
+            clip-path: polygon(22% 0, 78% 0, 100% 50%, 78% 100%, 22% 100%, 0 50%);
+            border-radius: 0;
+            border-color: transparent;
+            background: rgba(111, 200, 240, 0.16);
+            color: #6FC8F0;
+            font-weight: bold;
+            padding-left: 20px;
+            padding-right: 20px;
+            filter:
+                drop-shadow(1px 0 0)
+                drop-shadow(-1px 0 0)
+                drop-shadow(0 1px 0)
+                drop-shadow(0 -1px 0)
+                drop-shadow(0 0 4px);
+        }
+
         .signal-node::after {
             content: '';
             position: absolute;
@@ -861,6 +880,20 @@
             display: inline-block;
         }
 
+        /* Parent emoji sits on the far-left spine block (before the black notch),
+           not next to the title text on the right rail. */
+        .super-pool-emoji {
+            position: absolute;
+            top: 3px;
+            left: 20px;
+            font-size: 15px;
+            font-weight: bold;
+            line-height: 1;
+            color: #000;
+            z-index: 3;
+            pointer-events: none;
+        }
+
         .input-group {
             margin-bottom: 2px;
             padding: 2px;
@@ -998,7 +1031,7 @@
 
     <a class="credit-button" href="https://like.audio/20260627/twist-like-audio/" target="_blank" rel="noopener">CREATED BY ANTHONY PETER KUZUB&nbsp;&nbsp;-&nbsp;&nbsp;WWW.LIKE.AUDIO</a>
 
-    <script type="module" src="js/main.js?v=67"></script>
+    <script type="module" src="js/main.js?v=72"></script>
     <script>
         // Offline cache: after the first load the app serves from the local
         // machine and stops hitting the website. See sw.js.

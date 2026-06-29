@@ -50,7 +50,8 @@ import { monoEmoji } from './util/mono-emoji.js';
         const container = document.createElement('div');
         container.className = 'super-pool-container portals-pool';
         container.innerHTML = `
-            <div class="super-pool-title foldable-header"><span>${monoEmoji('portal')}PORTALS</span><span class="fold-icon" style="transform:rotate(-90deg);display:inline-block;transition:transform .2s;">▼</span></div>
+            <div class="super-pool-emoji">${monoEmoji('portal').trim()}</div>
+            <div class="super-pool-title foldable-header"><span>PORTALS</span><span class="fold-icon" style="transform:rotate(-90deg);display:inline-block;transition:transform .2s;">▼</span></div>
             <div class="super-pool-content" style="display:none;">
                 <button class="portal-new">＋ NEW PORTAL</button>
                 <div class="portal-srcs"><div class="portal-empty">no portals yet</div></div>

@@ -129,9 +129,10 @@ import { updateTwistVisuals } from './visuals.js';
         const s = document.createElement('style');
         s.id = STYLE_ID;
         s.textContent = `
-        .cl-btn{position:fixed;right:244px;bottom:42px;z-index:1000;background:#C2B74B;color:#1a1206;
+        .cl-btn{display:block;width:100%;z-index:1000;background:#C2B74B;color:#1a1206;
             border:none;font-family:'Courier New',monospace;font-weight:900;letter-spacing:2px;text-transform:uppercase;
-            padding:8px 16px 8px 18px;border-radius:6px 18px 18px 6px;cursor:pointer;box-shadow:inset -5px 0 0 #8f8a35;}
+            padding:9px 16px;margin-bottom:10px;border-radius:18px 6px 6px 18px;cursor:pointer;box-shadow:inset 6px 0 0 #8f8a35;
+            text-align:left;}
         .cl-btn:hover{filter:brightness(1.1);}
         .cl-btn:hover{background:#ffcf6b;color:#000;}
         .cl-badge{display:inline-block;min-width:16px;margin-left:6px;padding:0 5px;border-radius:8px;
@@ -262,7 +263,10 @@ import { updateTwistVisuals } from './visuals.js';
         b.className = 'cl-btn';
         b.innerHTML = `CAPTAIN'S LOG<span class="cl-badge">0</span>`;
         b.addEventListener('click', open);
-        document.body.appendChild(b);
+        // The Captain's Log sits at the TOP of the sources panel, above SOUND.
+        const panel = document.querySelector('.ingress-panel');
+        if (panel) panel.insertBefore(b, panel.firstChild);
+        else document.body.appendChild(b);
     }
 
     function init() {

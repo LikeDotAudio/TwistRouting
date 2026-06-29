@@ -33,7 +33,10 @@ export function makeNodeDraggable(node) {
             holdTimer = setTimeout(() => {
                 const children = node.querySelector('.multiplex-children');
                 if (children) {
-                    children.style.display = children.style.display === 'none' ? 'flex' : 'none';
+                    const opening = children.style.display === 'none';
+                    children.style.display = opening ? 'flex' : 'none';
+                    // A ganged cell grows to full row width while expanded.
+                    if (node.classList.contains('gang-cell')) node.classList.toggle('expanded', opening);
                 }
             }, 400);
         };
