@@ -36,7 +36,21 @@ npm test             # vitest (routing-core unit tests, dispatch tests)
 npm run build        # → dist/  (content-hashed; retires the ?v= ritual)
 ```
 
-`Routes/**` and the LCARS styling are **shared** with the live app — never forked.
+## Deploy (side-by-side, no cutover)
+
+The build has a relative base, so `dist/` drops at the site root next to the
+shared `Routes/`. `deploy-next.py` uploads ONLY the built artifacts so the new
+app is reachable at `/index.next.html` while the live `index.htm` (+ its service
+worker / `js/` shell) stay untouched. Reversible: delete `/index.next.html` +
+`/assets` on the server to undo.
+
+```bash
+npm run build
+python3 deploy-next.py     # → /index.next.html + /assets/  (live app untouched)
+```
+
+`Routes/**` and the LCARS styling are **shared** with the live app — never
+forked; `Routes/` is kept on the server by the live `uploadftp.py` deploy.
 
 ## Status
 
