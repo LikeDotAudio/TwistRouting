@@ -2,25 +2,73 @@
   "id": "prod9",
   "name": "PROD 9",
   "color": "#4477DD",
-  "outputs": {
-    "video": [
-      "AUX 1",
-      "AUX 2",
-      "MV 1",
-      "PROGRAM"
-    ],
-    "audio": [
-      "MAIN MIX",
-      "MIX MINUS 1",
-      "MIX MINUS 2",
-      "MIX MINUS 3",
-      "MIX MINUS 4"
-    ],
-    "intercom": [
-      "IFB OUT 1",
-      "IFB OUT 2",
-      "IFB OUT 3",
-      "IFB OUT 4"
-    ]
-  }
+  "boxes": [
+    {
+      "name": "PROGRAM",
+      "audio": [
+        "A1",
+        "A2",
+        "A3",
+        "A4"
+      ]
+    },
+    {
+      "name": "AUX 1",
+      "audio": [
+        "MIX MINUS 1",
+        "MIX MINUS 2",
+        "MIX MINUS 3",
+        "MIX MINUS 4"
+      ]
+    },
+    {
+      "name": "AUX 2",
+      "audio": [
+        "IFB OUT 1",
+        "IFB OUT 2",
+        "IFB OUT 3",
+        "IFB OUT 4"
+      ]
+    },
+    {
+      "name": "MV 1",
+      "audio": []
+    },
+    {
+      "name": "ISO 1",
+      "audio": [
+        "A1",
+        "A2",
+        "A3",
+        "A4"
+      ]
+    },
+    {
+      "name": "ISO 2",
+      "audio": [
+        "A1",
+        "A2",
+        "A3",
+        "A4"
+      ]
+    },
+    {
+      "name": "ISO 3",
+      "audio": [
+        "A1",
+        "A2",
+        "A3",
+        "A4"
+      ]
+    },
+    {
+      "name": "ISO 4",
+      "audio": [
+        "A1",
+        "A2",
+        "A3",
+        "A4"
+      ]
+    }
+  ]
 }

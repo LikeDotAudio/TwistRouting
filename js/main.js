@@ -12,6 +12,7 @@ import './editors/camera-control.js';
 import './editors/audio-monitor.js';
 import './editors/ifb.js';
 import './editors/stagebox-input.js';
+import './editors/encoder.js';
 import './clock.js';
 import './touchDrag.js';
 import './tutorial.js';

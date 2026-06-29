@@ -15,11 +15,13 @@ export const CSS = `
     width:64px;height:96px;border-radius:30px 30px 12px 12px;background:linear-gradient(#e7b48a,#b67a52);
     box-shadow:0 8px 24px rgba(0,0,0,.5);transition:left .1s linear;}
 .cc-subject::after{content:'';position:absolute;left:50%;top:-30px;transform:translateX(-50%);width:40px;height:40px;border-radius:50%;background:#e7b48a;}
-.cc-smpte{position:absolute;inset:0;display:none;} .cc-smpte.on{display:block;}
-/* the bouncing DVD-style lineage logo (parent › child › grandchild) */
-.cc-dvd{position:absolute;left:0;top:0;display:none;padding:6px 12px;border:2px solid currentColor;border-radius:7px;
-    font:900 13px 'Courier New',monospace;letter-spacing:1px;color:#fff;white-space:nowrap;z-index:6;pointer-events:none;
-    background:rgba(0,0,0,.35);text-shadow:0 0 6px rgba(0,0,0,.8);box-shadow:0 0 12px currentColor;}
+/* Colour bars: the largest 1:1 square that fits (full height), centred */
+.cc-smpte{position:absolute;top:0;bottom:130px;left:50%;transform:translateX(-50%);aspect-ratio:1/1;display:none;z-index:1;}
+.cc-smpte.on{display:block;} .cc-smpte canvas{width:100%;height:100%;display:block;}
+/* the bouncing DVD-style lineage badge (parent › child › grandchild) — big & fast */
+.cc-dvd{position:absolute;left:0;top:0;display:none;padding:12px 22px;border:3px solid currentColor;border-radius:10px;
+    font:900 22px 'Courier New',monospace;letter-spacing:2px;color:#fff;white-space:nowrap;z-index:6;pointer-events:none;
+    background:rgba(0,0,0,.4);text-shadow:0 0 8px rgba(0,0,0,.9);box-shadow:0 0 18px currentColor;}
 .cc-dvd.on{display:block;}
 
 .cc-osd{position:absolute;left:50%;transform:translateX(-50%);top:8px;font:bold 12px 'Courier New',monospace;color:#caffd6;letter-spacing:1px;text-shadow:0 0 4px #000;z-index:5;}
@@ -93,7 +95,21 @@ export const CSS = `
 .cc-keys{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
 .cc-key{padding:16px 6px;border-radius:10px;border:1px solid #2c3e5e;background:#0c1730;color:#bcd3ee;font-size:12px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;cursor:pointer;text-align:center;}
 .cc-key:hover{background:#16243d;} .cc-key.on{background:#6FC8F0;color:#001019;border-color:#6FC8F0;}
-.cc-tel{font:14px 'Courier New',monospace;color:#aee0ff;line-height:1.9;} .cc-tel b{color:#fff;}
+/* telemetry as its own overlaid box on the glass (bottom-left, above waveform) */
+.cc-tel-box{position:absolute;left:10px;bottom:142px;z-index:5;background:rgba(3,9,18,.66);border:1px solid #1d3354;border-radius:9px;padding:10px 13px;min-width:160px;}
+/* glass function buttons */
+.cc-fbtn{position:absolute;z-index:6;padding:13px 20px;border-radius:11px;border:1px solid #2c3e5e;background:rgba(12,23,48,.86);color:#bcd3ee;font:900 13px sans-serif;letter-spacing:2px;text-transform:uppercase;cursor:pointer;user-select:none;}
+.cc-fbtn:hover{background:rgba(22,36,61,.92);}
+.cc-fbtn.on{background:#6FC8F0;color:#001019;border-color:#6FC8F0;box-shadow:0 0 12px rgba(111,200,240,.5);}
+.cc-bars-btn{right:14px;bottom:144px;}
+.cc-wb-btn{left:10px;top:50%;transform:translateY(-50%);overflow:hidden;}
+.cc-wb-btn .fill{position:absolute;left:0;bottom:0;width:100%;height:0;background:rgba(255,212,0,.35);z-index:-1;transition:none;}
+.cc-wb-btn.on{background:#39d353;color:#04140a;border-color:#39d353;box-shadow:0 0 12px rgba(57,211,83,.5);}
+.cc-tel-box .cap{color:#6FC8F0;font:bold 9px 'Courier New',monospace;letter-spacing:2px;margin-bottom:5px;}
+.cc-tel{font:12px 'Courier New',monospace;color:#aee0ff;line-height:1.75;} .cc-tel b{color:#fff;}
+/* camera nickname field */
+.cc-nick{width:100%;box-sizing:border-box;margin-bottom:10px;background:#070f1f;border:1px solid #2c3e5e;border-radius:8px;color:#fff;font:bold 14px 'Courier New',monospace;letter-spacing:1px;padding:9px 11px;}
+.cc-nick::placeholder{color:#6b82a3;}
 
 /* ---- footer ---- */
 .cc-foot{grid-column:1 / -1;grid-row:2;display:flex;gap:16px;align-items:stretch;}

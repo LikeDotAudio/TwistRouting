@@ -28,23 +28,37 @@ export function renderProductionInputs(programs, container) {
         const group = document.createElement('div');
         group.className = 'input-group';
 
-        let items = '';
-        videoOuts.forEach(o => {
-            items += `<div class="signal-node video video-main" draggable="true" data-origin="${pgm.name}" id="prodsrc-${pgm.id}-${slug(o)}" style="border-color:${color}; color:${color};">${pgm.name} ${o}</div>`;
-        });
-        audioOuts.forEach(o => {
-            items += `<div class="signal-node audio audio-studio" draggable="true" data-origin="${pgm.name}" id="prodsrc-${pgm.id}-${slug(o)}">${pgm.name} ${o}</div>`;
-        });
-        intercomOuts.forEach(o => {
-            items += `<div class="signal-node audio audio-comms" draggable="true" data-origin="${pgm.name}" id="prodsrc-${pgm.id}-${slug(o)}">${pgm.name} ${o}</div>`;
-        });
+        let items = '', gridClass = 'input-grid-audio';
+        if (Array.isArray(pgm.boxes)) {
+            // Bundled outputs: each box is a multiplex (video feed + embedded audio)
+            // — e.g. PROGRAM (V + 4 audio), AUX 1 (the mix-minuses), AUX 2 (the IFBs),
+            // and the ISO record outputs (V + audio).
+            gridClass = 'input-grid-video';
+            pgm.boxes.forEach(box => {
+                const bid = `prodsrc-${pgm.id}-${slug(box.name)}`, orig = `${pgm.name} — ${box.name}`;
+                let subs = '';
+                if (box.video !== false) subs += `<div class="signal-node video video-main sub-stream" draggable="true" data-origin="${orig}" id="${bid}-v" style="border-color:${color};color:${color};">${box.name} V</div>`;
+                (box.audio || []).forEach(a => { subs += `<div class="signal-node audio audio-studio sub-stream" draggable="true" data-origin="${orig}" id="${bid}-${slug(a)}">${box.name} ${a}</div>`; });
+                items += `<div class="signal-node video multiplex video-main" draggable="true" data-origin="${orig}" id="${bid}" style="border-color:${color};color:${color};"><div class="multiplex-header">${box.name}</div><div class="multiplex-children" style="display:none;">${subs}</div></div>`;
+            });
+        } else {
+            videoOuts.forEach(o => {
+                items += `<div class="signal-node video video-main" draggable="true" data-origin="${pgm.name}" id="prodsrc-${pgm.id}-${slug(o)}" style="border-color:${color}; color:${color};">${pgm.name} ${o}</div>`;
+            });
+            audioOuts.forEach(o => {
+                items += `<div class="signal-node audio audio-studio" draggable="true" data-origin="${pgm.name}" id="prodsrc-${pgm.id}-${slug(o)}">${pgm.name} ${o}</div>`;
+            });
+            intercomOuts.forEach(o => {
+                items += `<div class="signal-node audio audio-comms" draggable="true" data-origin="${pgm.name}" id="prodsrc-${pgm.id}-${slug(o)}">${pgm.name} ${o}</div>`;
+            });
+        }
 
         group.innerHTML = `
             <div class="foldable-header" style="--lcars-color: ${color}; background-color: ${color}; font-size: 11px; margin-bottom: 8px;" onclick="togglePool(this)">
                 <span>${pgm.name}</span>
                 <span class="fold-icon" style="transform: rotate(-90deg); display: inline-block; transition: transform 0.2s;">▼</span>
             </div>
-            <div class="input-grid-audio pool-content" style="display: none;">
+            <div class="${gridClass} pool-content" style="display: none;">
                 ${items}
             </div>
         `;

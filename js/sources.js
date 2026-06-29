@@ -23,7 +23,7 @@ import { renderVideoPool, fillVideoCameras } from './poolVideo.js';
 export function inferPoolKind(data) {
     if (!data || typeof data !== 'object') return 'video';
     if (Array.isArray(data.players)) return 'playout';
-    if (data.outputs && typeof data.outputs === 'object') return 'productions';
+    if ((data.outputs && typeof data.outputs === 'object') || Array.isArray(data.boxes)) return 'productions';
     const ec = (data.extraClass || '').toLowerCase();
     if (ec.includes('audio') || Array.isArray(data.items)) return 'audio';
     return 'video';

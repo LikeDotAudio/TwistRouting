@@ -7,6 +7,7 @@
 //   P1 Director (breaks program) · P2 Technical Director · P3 Production Assistant.
 // The operator monitors the CONFIDENCE FEED — exactly what the talent hears.
 import { register, addStyles, pushTimer } from './core.js';
+import { renderGridOfSiblings } from './multi.js';
 
 const CSS = `
 .ifb{display:grid;grid-template-columns:200px minmax(0,1fr) 320px;gap:16px;height:100%;}
@@ -52,7 +53,10 @@ const CSS = `
 .ifb-talk.p1.on{box-shadow:0 0 14px rgba(255,59,59,.7);}
 `;
 
-function render(body, twist) {
+function render(body, twist) { renderGridOfSiblings(body, twist, /\bifb\b|foldback/i, buildOne); }
+
+function buildOne(host, twist) {
+    const body = host;
     addStyles('ifb-styles', CSS);
     const PRIO = [
         { p: 1, nm: 'DIRECTOR', sub: 'Breaks program', c: '#ff3b3b' },

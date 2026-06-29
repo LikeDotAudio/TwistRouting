@@ -5,6 +5,7 @@
 // main output), per-block phase correlation + Lissajous, and a master section
 // with volume, MUTE/DIM, stereo downmix and ITU-R BS.1770 loudness (LUFS).
 import { register, addStyles, channelsFor, pushTimer } from './core.js';
+import { renderGridOfSiblings } from './multi.js';
 
 const CSS = `
 .am2{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;height:100%;}
@@ -38,8 +39,9 @@ const CSS = `
 .am2-master{display:flex;flex-direction:column;gap:14px;overflow:auto;}
 .am2-card{background:#0a1326;border:1px solid #1d2942;border-radius:12px;padding:16px;}
 .am2-card h4{margin:0 0 12px;color:#6FC8F0;font-size:13px;letter-spacing:2px;text-transform:uppercase;}
-.am2-lufs{font:bold 40px 'Courier New',monospace;color:#cfe6ff;text-align:center;line-height:1;}
+.am2-lufs{font:bold 38px 'Courier New',monospace;color:#cfe6ff;text-align:center;line-height:1;}
 .am2-lufs small{display:block;font-size:12px;color:#6b82a3;letter-spacing:2px;margin-top:6px;}
+.am2-lhist{display:block;width:100%;height:96px;background:#070f1f;border:1px solid #1d2942;border-radius:8px;margin-top:12px;}
 .am2-tp{margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;font:bold 11px sans-serif;letter-spacing:1px;color:#7e93b5;}
 .am2-tp .led{width:12px;height:12px;border-radius:50%;background:#1f5a3a;}
 .am2-tp.hot{color:#ff6a6a;} .am2-tp.hot .led{background:#ff2b2b;box-shadow:0 0 9px #ff2b2b;}
@@ -57,7 +59,10 @@ const CSS = `
 
 const FORMATS = ['QUAD', '2× STEREO', '3.1 GROUP', '4× MONO'];
 
-function render(body, twist, config) {
+function render(body, twist) { renderGridOfSiblings(body, twist, /audio\s*monitor/i, buildOne); }
+
+function buildOne(host, twist) {
+    const body = host, config = null;
     addStyles('am2-styles', CSS);
     let chans = channelsFor(twist, config, 'CH', 8).slice(0, 24);
     const st = chans.map((c, i) => ({
@@ -98,7 +103,8 @@ function render(body, twist, config) {
     const master = body.querySelector('.am2-master');
     master.innerHTML = `
       <div class="am2-card"><h4>Loudness · ITU-R BS.1770</h4>
-        <div class="am2-lufs"><span class="v">-23.0</span><small>LUFS · INTEGRATED</small></div>
+        <div class="am2-lufs"><span class="v">-23.0</span><small>LUFS · MOMENTARY</small></div>
+        <canvas class="am2-lhist"></canvas>
         <div class="am2-tp"><span class="led"></span><span class="t">TRUE PEAK OK</span></div>
       </div>
       <div class="am2-card"><h4>Monitor Output</h4>
@@ -115,6 +121,7 @@ function render(body, twist, config) {
         </div>
       </div>`;
     const lufsEl = master.querySelector('.am2-lufs .v'), tpEl = master.querySelector('.am2-tp'), tpTxt = master.querySelector('.am2-tp .t');
+    const lhEl = master.querySelector('.am2-lhist'); const lhist = [];
     const vol = master.querySelector('.am2-vol input'), volLbl = master.querySelector('.am2-vol b');
     const setVolLbl = () => { const db = ui.master <= 0 ? '-∞' : Math.round((ui.master - 1) * 60); volLbl.textContent = (ui.master <= 0 ? '-∞' : db) + ' dB'; };
     vol.addEventListener('input', () => { ui.master = parseFloat(vol.value); setVolLbl(); }); setVolLbl();
@@ -156,7 +163,27 @@ function render(body, twist, config) {
         ui.lufs += (target - ui.lufs) * 0.05;
         lufsEl.textContent = ui.lufs.toFixed(1);
         tpEl.classList.toggle('hot', hot); tpTxt.textContent = hot ? 'TRUE PEAK!' : 'TRUE PEAK OK';
+        lhist.push(ui.lufs); if (lhist.length > 240) lhist.shift();
+        drawLoud(lhEl, lhist);
     }, 40));
+}
+
+// Loudness-over-time plot, with the −23 LUFS broadcast target line.
+function drawLoud(cv, hist) {
+    const w = cv.width = cv.clientWidth, h = cv.height = cv.clientHeight, ctx = cv.getContext('2d');
+    if (!w || !h) return;
+    ctx.clearRect(0, 0, w, h);
+    const lo = -40, hi = -8, y = (v) => h - ((v - lo) / (hi - lo)) * h;
+    // gridlines + labels
+    ctx.font = '8px Courier New, monospace';
+    [-12, -18, -23, -30].forEach(v => {
+        const yy = y(v); ctx.strokeStyle = v === -23 ? 'rgba(57,211,83,.45)' : 'rgba(80,110,150,.18)';
+        ctx.beginPath(); ctx.moveTo(20, yy); ctx.lineTo(w, yy); ctx.stroke();
+        ctx.fillStyle = v === -23 ? 'rgba(120,235,150,.8)' : 'rgba(120,150,190,.6)'; ctx.fillText(String(v), 1, yy + 3);
+    });
+    ctx.beginPath();
+    hist.forEach((v, i) => { const x = 20 + i / 240 * (w - 20), yy = y(v); i ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy); });
+    ctx.strokeStyle = '#6FC8F0'; ctx.lineWidth = 1.6; ctx.stroke();
 }
 
 function drawLiss(cv, corr, frame, amp) {

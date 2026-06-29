@@ -222,6 +222,10 @@
         "TRK 16"
       ],
       "row": "iso"
+    },
+    {
+      "name": "Encoder",
+      "accepts": "both"
     }
   ]
 }

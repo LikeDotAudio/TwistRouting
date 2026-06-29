@@ -21,7 +21,8 @@ function render(body, twist) {
     const myNum = parseInt((titleTxt.match(/\d+/) || [1])[0], 10) || 1;
     // Lineage of the routed camera (parent › child › grandchild) for the badge.
     const routed = twist.querySelector('.drop-zone .signal-node');
-    const origin = routed ? (routed.dataset.origin || '') : '';
+    let origin = routed ? (routed.dataset.origin || '') : '';
+    if (!origin && routed) { const c = routed.querySelector('[data-origin]'); if (c) origin = c.dataset.origin || ''; }
     const parts = origin.split(' — ').map(s => s.trim()).filter(Boolean);
     const lineage = (parts.length ? parts : [titleTxt]).join('  ›  ').toUpperCase();
 
@@ -33,9 +34,9 @@ function render(body, twist) {
         <div class="cc-glass">
           <div class="cc-video">
             <div class="cc-scene"><div class="cc-subject"></div></div>
-            <canvas class="cc-smpte"></canvas>
-            <div class="cc-dvd"></div>
           </div>
+          <div class="cc-smpte"><canvas></canvas></div>
+          <div class="cc-dvd"></div>
           <div class="cc-osd"></div>
           <div class="cc-rec">● REC</div>
           <div class="cc-map top"><div class="lbl">TOP-DOWN · PAN / DOLLY</div>${topSVG()}</div>
@@ -43,6 +44,9 @@ function render(body, twist) {
           <div class="cc-vec"><div class="cross"></div><div class="dot"></div></div>
           <div class="cc-wf-tag">RGB PARADE · IRE</div>
           <canvas class="cc-wf"></canvas>
+          <div class="cc-tel-box"><div class="cap">TELEMETRY</div><div class="cc-tel"></div></div>
+          <div class="cc-fbtn cc-bars-btn">Color Bars</div>
+          <div class="cc-fbtn cc-wb-btn">Auto WB<div class="fill"></div></div>
         </div>
 
         <div class="cc-rail">
@@ -61,15 +65,10 @@ function render(body, twist) {
             <div class="cc-venn"><div class="cc-venn-bg"><span class="r"></span><span class="g"></span><span class="b"></span></div></div>
           </div>
 
-          <div class="cc-card"><h4>Functions</h4>
-            <div class="cc-keys"><div class="cc-key" data-act="bars">Color Bars</div><div class="cc-key" data-act="autoiris">Auto Iris</div><div class="cc-key" data-act="wb">White Bal</div></div>
-          </div>
-
-          <div class="cc-card"><h4>Telemetry</h4><div class="cc-tel"></div></div>
         </div>
 
         <div class="cc-foot">
-          <div class="cc-card"><h4>Camera Bank · Tally</h4><div class="cc-tallies"></div></div>
+          <div class="cc-card"><h4>Camera Bank · Tally</h4><input class="cc-nick" placeholder="Nickname — e.g. ANCHOR 1 (trickles to mixer/MV)"><div class="cc-tallies"></div></div>
           <div class="cc-card"><h4>Robotics &amp; Camera Presets · Scene Memory</h4>
             <div class="cc-pre"></div>
             <div class="cc-keys"><div class="cc-key" data-act="save">Save</div><div class="cc-key" data-act="path">Rec Path</div><div class="cc-key" data-act="lookat">Look-At</div></div>
@@ -79,7 +78,7 @@ function render(body, twist) {
 
     const $ = (s) => body.querySelector(s);
     const scene = $('.cc-scene'), subject = $('.cc-subject'), video = $('.cc-video');
-    const smpte = $('.cc-smpte'), wf = $('.cc-wf'), osd = $('.cc-osd'), vecDot = $('.cc-vec .dot'), tel = $('.cc-tel');
+    const smpte = $('.cc-smpte canvas'), smpteBox = $('.cc-smpte'), wf = $('.cc-wf'), osd = $('.cc-osd'), vecDot = $('.cc-vec .dot'), tel = $('.cc-tel');
     const dvd = $('.cc-dvd'); dvd.textContent = lineage;
 
     function shade() {
@@ -99,10 +98,66 @@ function render(body, twist) {
     const syncPresets = buildPresets(ctx);
     const syncBank = buildTally(ctx, () => { syncKnobs(); syncAxes(); syncPresets(); });
     buildFunctions(ctx, syncKnobs);
-    ctx.dvdState = { x: 14, y: 14, dx: 1.7, dy: 1.3, color: '#fff' };
+    ctx.dvdState = { x: 14, y: 14, dx: 3.6, dy: 2.9, color: '#fff' };
+
+    // Colour Bars — glass button (bottom-right).
+    const barsBtn = $('.cc-bars-btn');
+    barsBtn.addEventListener('click', () => {
+        ui.bars = !ui.bars; barsBtn.classList.toggle('on', ui.bars);
+        smpteBox.classList.toggle('on', ui.bars); dvd.classList.toggle('on', ui.bars);
+        $('.cc-wf-tag').textContent = ui.bars ? 'RGB PARADE · COLOUR BARS' : 'RGB PARADE · IRE';
+    });
+
+    // Auto White Balance — glass button (left). Push & HOLD 2s to engage; a tap
+    // while active de-activates immediately.
+    const wbBtn = $('.cc-wb-btn'), wbFill = wbBtn.querySelector('.fill');
+    let wbT = null, wbRAF = 0;
+    const wbStart = (e) => {
+        if (e) e.preventDefault();
+        if (wbBtn.classList.contains('on')) { wbBtn.classList.remove('on'); ui.autowb = false; return; }
+        const t0 = performance.now();
+        const tick = () => { const p = Math.min(1, (performance.now() - t0) / 2000); wbFill.style.height = (p * 100) + '%'; if (wbT) wbRAF = requestAnimationFrame(tick); };
+        wbT = setTimeout(() => { wbBtn.classList.add('on'); wbFill.style.height = '0'; ui.autowb = true; wbT = null; }, 2000);
+        tick();
+    };
+    const wbCancel = () => { if (wbT) { clearTimeout(wbT); wbT = null; } cancelAnimationFrame(wbRAF); wbFill.style.height = '0'; };
+    wbBtn.addEventListener('mousedown', wbStart); window.addEventListener('mouseup', wbCancel); wbBtn.addEventListener('mouseleave', wbCancel);
+    wbBtn.addEventListener('touchstart', wbStart, { passive: false }); wbBtn.addEventListener('touchend', wbCancel);
+
+    // Iris encoder — push & HOLD (without dragging) to auto-iris.
+    const irisDial = $('.cc-mono .cc-dial');
+    let irisHold = null, irisMoved = false, irisY = 0;
+    const irisDown = (y) => { irisMoved = false; irisY = y; irisHold = setTimeout(() => { if (!irisMoved) ui.autoiris = true; }, 250); };
+    const irisUp = () => { clearTimeout(irisHold); ui.autoiris = false; };
+    irisDial.addEventListener('mousedown', e => irisDown(e.clientY));
+    window.addEventListener('mousemove', e => { if (Math.abs(e.clientY - irisY) > 5) irisMoved = true; });
+    window.addEventListener('mouseup', irisUp);
+    irisDial.addEventListener('touchstart', e => irisDown(e.touches[0].clientY), { passive: true });
+    window.addEventListener('touchend', irisUp);
+
+    // Nickname — relabel the camera; trickle to every consumer of this feed.
+    const nickEl = $('.cc-nick');
+    nickEl.addEventListener('input', () => {
+        const nm = nickEl.value.trim();
+        if (!origin) return;
+        document.querySelectorAll('.twist-container .drop-zone .signal-node').forEach(n => {
+            const own = n.dataset.origin || '', childO = n.querySelector('[data-origin]');
+            if (!(own === origin || (childO && childO.dataset.origin === origin))) return;
+            if (n.classList.contains('dropped-group')) {
+                let cap = n.querySelector('.dg-parent'); const hd = n.querySelector('.dropped-group-header');
+                if (!cap && hd) { cap = document.createElement('span'); cap.className = 'dg-parent'; hd.prepend(cap); }
+                if (cap) cap.textContent = nm;
+            } else if (!n.querySelector('.multiplex-children')) {
+                if (n.dataset.orig === undefined) n.dataset.orig = n.textContent;
+                n.textContent = nm || n.dataset.orig;
+            }
+        });
+    });
 
     function frame() {
         ui.t += 0.05; const s = ctx.S();
+        if (ui.autoiris) { const tgt = 0.6 + Math.sin(ui.t * 0.6) * 0.05; s.iris += (tgt - s.iris) * 0.07; syncKnobs(); }
+        if (ui.autowb) { ['rGain', 'gGain', 'bGain'].forEach(k => s[k] += (0.5 - s[k]) * 0.1); syncKnobs(); }
         if (ctx.fly) {
             ctx.fly.t = Math.min(1, ctx.fly.t + 0.04);
             const e = ctx.fly.t < .5 ? 2 * ctx.fly.t * ctx.fly.t : 1 - Math.pow(-2 * ctx.fly.t + 2, 2) / 2;
@@ -113,7 +168,7 @@ function render(body, twist) {
         subject.style.setProperty('--subx', (50 - (s.pan - 0.5) * 80) + '%');
         const zs = 0.7 + s.zoom * 2.6 + s.dolly * 0.4, ty = (s.tilt - 0.5) * -40 + (s.ped - 0.5) * -30;
         subject.style.transform = `translate(-50%,-50%) scale(${zs.toFixed(2)}) translateY(${ty}px)`;
-        if (ui.bars) { drawSMPTE(smpte); stepDVD(dvd, video, ctx.dvdState); }
+        if (ui.bars) { drawSMPTE(smpte); stepDVD(dvd, smpteBox, ctx.dvdState); }
         drawParade(wf, s, ui.bars); updateMaps(body, s);
         const focal = Math.round(8 + s.zoom * 280), fstop = (1.8 + (1 - s.iris) * 14).toFixed(1);
         osd.innerHTML = `CAM ${ui.active + 1} &nbsp; LIVE &nbsp; f/${fstop} &nbsp; ${focal}mm`;
