@@ -8,17 +8,30 @@
 
 import type { Capability, Hex, TwistConfig } from '../model/index.js';
 import type { Feed } from '../domain/routing-core/index.js';
+import type { Disposer } from '../ui/timers.js';
+
+/** A sibling twist of the same kind in this production (used by grid editors). */
+export interface Sibling {
+  name: string;
+  config: TwistConfig | null;
+  sources: Feed[];
+}
 
 /** Everything an editor needs, as data — resolved by the host, not scraped. */
 export interface EditorContext {
+  /** This twist's display name and parsed config. */
+  twist: { name: string; config: TwistConfig | null };
   /** Feeds routed into this twist (groups already expanded). */
   sources: Feed[];
-  config: TwistConfig | null;
   production: { name: string; color: Hex };
+  /** Same-kind siblings in this production (includes this twist), for grid editors. */
+  siblings: ReadonlyArray<Sibling>;
   /** Role gate — true if the current operator holds the capability. */
   can(cap: Capability): boolean;
   /** Typed cross-editor service (replaces window.openStageBox). */
   services: EditorServices;
+  /** Lifecycle bag — register intervals/rAF so the host disposes them on close. */
+  dispose: Disposer;
 }
 
 export interface EditorServices {
@@ -33,6 +46,12 @@ export interface EditorPlugin {
   /** Does this editor handle a twist with the given name? */
   match(twistName: string): boolean;
   title: string;
+  /**
+   * Dispatch precedence for overlapping regexes (lower wins; default 100).
+   * Preserves the legacy import-order semantics (G8) without a central list:
+   * an editor that must beat another for a shared name declares a lower order.
+   */
+  order?: number;
   /** Editor-level gating; the host hides the editor if unmet. */
   requiredCaps?: Capability[];
   render: EditorRender;

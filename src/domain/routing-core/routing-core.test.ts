@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   isFaultStatus, emptyGraph, take, clear, feedsInto, destFaulted, diff,
+  salvo, computeTally, mixMinus,
   type Feed,
 } from './index.js';
 
@@ -54,5 +55,36 @@ describe('route graph', () => {
   it('clear() removes a crosspoint', () => {
     const g = clear(take(emptyGraph(), 'x', 'd'), 'x', 'd');
     expect(g.crosspoints).toHaveLength(0);
+  });
+});
+
+describe('salvo', () => {
+  it('applies a batch of takes atomically and is re-fireable', () => {
+    const g = salvo(emptyGraph(), { name: 'open', takes: [
+      { source: 'a', dest: 'd1' }, { source: 'b', dest: 'd2' },
+    ] });
+    expect(g.crosspoints).toHaveLength(2);
+    expect(salvo(g, { name: 'open', takes: [{ source: 'a', dest: 'd1' }] }).crosspoints).toHaveLength(2);
+  });
+});
+
+describe('computeTally', () => {
+  it('marks pgm/pvw/off per source from the bus assignments', () => {
+    let g = emptyGraph();
+    g = { ...g, sources: new Map([['a', feed('a')], ['b', feed('b')], ['c', feed('c')]]) };
+    g = take(take(take(g, 'a', 'PGM'), 'b', 'PVW'), 'a', 'PVW');
+    const tally = computeTally(g, { program: 'PGM', preview: 'PVW' });
+    expect(tally.get('a')).toBe('pgm');   // program wins over preview
+    expect(tally.get('b')).toBe('pvw');
+    expect(tally.get('c')).toBe('off');
+  });
+});
+
+describe('mixMinus', () => {
+  it('returns every feed into a dest except the excluded return', () => {
+    let g = emptyGraph();
+    g = { ...g, sources: new Map([['host', feed('host')], ['gst', feed('gst')]]) };
+    g = take(take(g, 'host', 'bus'), 'gst', 'bus');
+    expect(mixMinus(g, 'bus', 'host').map((f) => f.id)).toEqual(['gst']);
   });
 });
