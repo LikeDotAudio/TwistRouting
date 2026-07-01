@@ -16,6 +16,8 @@ import './editors/encoder.js';
 import './editors/signaling.js';
 import './editors/lighting.js';
 import './editors/wysiwyg.js';
+import './editors/meter-input.js';
+import './editors/conditioner-row.js';
 import './auth.js';
 import './schedule.js';
 import './mission.js';

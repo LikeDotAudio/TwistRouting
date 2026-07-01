@@ -5,6 +5,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "deploy": "python3 deploy.py",
+    "deploy:all": "python3 deploy.py --all",
+    "deploy:next": "python3 deploy.py --next --all",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

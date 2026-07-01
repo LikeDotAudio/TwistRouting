@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meter Input · REAL-VIDEO Scope Playground</title>
+<!--
+  Meter Input — REAL video/audio scope playground.  "Just for testing & playing."
+  Serve it (getDisplayMedia + getImageData need a secure context = http://localhost):
+      python3 start.py       # then open  /src/editors/meter-input/playground.html
+  ─────────────────────────────────────────────────────────────────────────────
+  Why the YouTube <iframe> itself can't be scoped: it is cross-origin, so the
+  canvas becomes "tainted" and getImageData()/WebAudio are blocked by the browser.
+  So to scope the ACTUAL YouTube video, press ▶ on the embed, then CAPTURE TAB and
+  pick this tab (tick "share tab audio"). getDisplayMedia gives a real MediaStream
+  we CAN read → the scopes run on the real pixels + audio.
+  Other real sources: LOAD FILE (any local video) and a CORS-enabled media URL.
+  TEST PATTERN is a built-in generated source so the scopes always have real
+  pixels to chew on, even offline.
+-->
+<style>
+  :root { --bg:#03060f; --panel:#0a1326; --edge:#1d2942; --cyan:#6FC8F0; --ink:#cfe6ff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:radial-gradient(circle at 50% 20%,#0d1730,#03060f 85%); color:var(--ink);
+         font:13px/1.4 Arial,Helvetica,sans-serif; padding:14px; }
+  h1 { font-size:15px; letter-spacing:2px; text-transform:uppercase; color:var(--cyan); margin:0 0 4px; }
+  .sub { color:#7d93b3; font-size:11px; margin:0 0 12px; }
+  .bar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:12px; }
+  button, .lab, input[type=text] {
+      font:bold 11px sans-serif; letter-spacing:1px; text-transform:uppercase; color:var(--ink);
+      background:var(--panel); border:1px solid var(--edge); border-radius:7px; padding:7px 12px; cursor:pointer; }
+  button.on { background:#ffd400; color:#1a1206; border-color:#ffd400; }
+  button:hover { filter:brightness(1.15); }
+  input[type=text] { text-transform:none; min-width:340px; cursor:text; }
+  input[type=file] { display:none; }
+  .status { font-size:11px; color:#e6a13a; margin-left:auto; }
+  .top { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+  .card { background:var(--panel); border:1px solid var(--edge); border-radius:12px; padding:10px; }
+  .card h4 { margin:0 0 8px; color:var(--cyan); font-size:11px; letter-spacing:2px; text-transform:uppercase; }
+  .yt { position:relative; padding-top:56.25%; border-radius:8px; overflow:hidden; background:#000; }
+  .yt iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
+  video { width:100%; border-radius:8px; background:#000; display:block; max-height:260px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; }
+  .scope { background:var(--bg); border:1px solid var(--edge); border-radius:8px; position:relative; overflow:hidden; }
+  .scope canvas { display:block; width:100%; }
+  .tag { position:absolute; left:8px; top:6px; font:bold 9px 'Courier New',monospace; letter-spacing:1px; color:var(--cyan); z-index:2; }
+  .row { display:flex; gap:12px; align-items:center; }
+  .lufs { font:bold 30px 'Courier New',monospace; color:var(--ink); }
+  .lufs small { display:block; font-size:10px; color:#6b82a3; letter-spacing:1px; }
+</style>
+</head>
+<body>
+  <h1>Meter Input · Real-Video Scope Playground</h1>
+  <p class="sub">Scopes compute from REAL pixels + audio. To scope the YouTube clip: press ▶ on it, then <b>Capture Tab</b> (tick “share tab audio”).</p>
+
+  <div class="bar">
+    <button id="bBars" class="on">▦ Test Pattern</button>
+    <button id="bCap">⧉ Capture Tab / Screen</button>
+    <button id="bFile">▶ Load File</button>
+    <input type="text" id="url" placeholder="…or paste a CORS-enabled .mp4/.webm URL">
+    <button id="bUrl">Load URL</button>
+    <input type="file" id="file" accept="video/*">
+    <span class="status" id="status">source: test pattern</span>
+  </div>
+
+  <div class="top">
+    <div class="card">
+      <h4>YouTube (reference — play it, then Capture Tab)</h4>
+      <div class="yt">
+        <iframe id="yt" src="https://www.youtube-nocookie.com/embed/INtqRqDJO8k?enablejsapi=1&rel=0"
+                allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+      </div>
+    </div>
+    <div class="card">
+      <h4>Analyzed Source (this is what the scopes read)</h4>
+      <video id="vid" playsinline muted controls></video>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><h4>RGB Parade</h4>
+      <div class="scope" style="height:210px"><span class="tag">R · G · B  (IRE)</span><canvas id="cParade"></canvas></div></div>
+    <div class="card"><h4>Luma Waveform</h4>
+      <div class="scope" style="height:210px"><span class="tag">Y'</span><canvas id="cWave"></canvas></div></div>
+    <div class="card"><h4>Vectorscope</h4>
+      <div class="scope" style="height:240px"><canvas id="cVec"></canvas></div></div>
+    <div class="card"><h4>Audio Oscilloscope</h4>
+      <div class="scope" style="height:150px"><canvas id="cAud"></canvas></div></div>
+    <div class="card"><h4>Meters · L / R (dBFS, peak-hold)</h4>
+      <div class="scope" style="height:150px"><canvas id="cMeter"></canvas></div></div>
+    <div class="card"><h4>Loudness (approx, K-less RMS)</h4>
+      <div class="row"><div class="lufs"><span id="lufs">-∞</span><small>LUFS-ish · integrated</small></div>
+      <div class="scope" style="height:110px;flex:1"><canvas id="cLoud"></canvas></div></div></div>
+  </div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const vid = $('vid'), status = $('status');
+  // Offscreen frame buffer the scopes read from (small = fast).
+  const AW = 256, AH = 144;
+  const off = document.createElement('canvas'); off.width = AW; off.height = AH;
+  const octx = off.getContext('2d', { willReadFrequently: true });
+  // Test-pattern generator canvas.
+  const gen = document.createElement('canvas'); gen.width = AW; gen.height = AH;
+  const gctx = gen.getContext('2d');
+
+  // Fit each visible canvas to its box once.
+  function fit(cv){ const r = cv.parentElement.getBoundingClientRect(); cv.width = Math.max(2, r.width|0); cv.height = Math.max(2, r.height|0); }
+  const cvs = ['cParade','cWave','cVec','cAud','cMeter','cLoud'].map($);
+  const fitAll = () => cvs.forEach(fit);
+  addEventListener('resize', fitAll); fitAll();
+
+  // ---- source selection --------------------------------------------------
+  let source = 'bars';           // 'bars' | 'stream' | 'media'
+  let mediaSrcNode = null;       // WebAudio node for the current audio source
+  let tainted = false;
+  const buttons = { bars:$('bBars'), cap:$('bCap'), file:$('bFile'), url:$('bUrl') };
+  function setStatus(t, warn){ status.textContent = t; status.style.color = warn ? '#ff6a6a' : '#e6a13a'; }
+  function hi(which){ [buttons.bars].forEach(b=>b.classList.remove('on')); if(which==='bars') buttons.bars.classList.add('on'); }
+
+  $('bBars').onclick = () => { stopStream(); source='bars'; tainted=false; hi('bars'); setStatus('source: test pattern'); };
+
+  $('bCap').onclick = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video:true, audio:true });
+      stopStream(); vid.srcObject = stream; vid.muted = true; await vid.play();
+      source='stream'; tainted=false; hi(); setStatus('source: captured tab/screen (real pixels + audio)');
+      wireAudio(stream, true);
+    } catch(e){ setStatus('capture cancelled / unavailable: '+e.message, true); }
+  };
+
+  $('bFile').onclick = () => $('file').click();
+  $('file').onchange = e => { const f = e.target.files[0]; if(f) loadMedia(URL.createObjectURL(f), false, 'file: '+f.name); };
+  $('bUrl').onclick = () => { const u = $('url').value.trim(); if(u) loadMedia(u, true, 'url'); };
+
+  function loadMedia(url, remote, label){
+    stopStream();
+    vid.srcObject = null;
+    if (remote) vid.crossOrigin = 'anonymous'; else vid.removeAttribute('crossorigin');
+    vid.src = url; vid.muted = false;
+    vid.play().then(()=>{ source='media'; tainted=false; hi(); setStatus('source: '+label);
+      try { wireAudio(vid, false); } catch(e){ setStatus('audio blocked (CORS): '+e.message, true); }
+    }).catch(e=> setStatus('load failed: '+e.message, true));
+  }
+
+  function stopStream(){
+    const s = vid.srcObject; if (s) s.getTracks().forEach(t=>t.stop());
+    vid.srcObject = null;
+  }
+
+  // ---- WebAudio (real audio scope / meters / loudness) -------------------
+  let actx, anTime, anL, anR, td, freqL, freqR;
+  function ensureCtx(){ if(!actx){ actx = new (window.AudioContext||window.webkitAudioContext)();
+    anTime = actx.createAnalyser(); anTime.fftSize = 1024; td = new Uint8Array(anTime.fftSize);
+    anL = actx.createAnalyser(); anR = actx.createAnalyser(); anL.fftSize = anR.fftSize = 1024;
+    freqL = new Float32Array(anL.fftSize); freqR = new Float32Array(anR.fftSize);
+  } if(actx.state==='suspended') actx.resume(); }
+
+  function wireAudio(srcObjOrEl, isStream){
+    ensureCtx();
+    if (mediaSrcNode) { try{ mediaSrcNode.disconnect(); }catch(e){} mediaSrcNode=null; }
+    mediaSrcNode = isStream ? actx.createMediaStreamSource(srcObjOrEl)
+                            : actx.createMediaElementSource(srcObjOrEl);
+    const splitter = actx.createChannelSplitter(2);
+    mediaSrcNode.connect(splitter);
+    splitter.connect(anL, 0); splitter.connect(anR, 1);
+    mediaSrcNode.connect(anTime);
+    // Play file/URL audio out loud; DON'T route captured tab audio (avoids echo — the tab already plays it).
+    if (!isStream) mediaSrcNode.connect(actx.destination);
+  }
+
+  // ---- test pattern ------------------------------------------------------
+  function drawBars(t){
+    const cols = ['#c0c0c0','#c0c000','#00c0c0','#00c000','#c000c0','#c00000','#0000c0'];
+    const w = AW/cols.length;
+    for(let i=0;i<cols.length;i++){ gctx.fillStyle=cols[i]; gctx.fillRect(i*w,0,w+1,AH*0.75); }
+    // moving gradient strip so the scopes visibly react
+    const g = gctx.createLinearGradient(0,0,AW,0); g.addColorStop(0,'#000');
+    g.addColorStop((Math.sin(t/1000)+1)/2,'#fff'); g.addColorStop(1,'#000');
+    gctx.fillStyle=g; gctx.fillRect(0,AH*0.75,AW,AH*0.25);
+  }
+
+  // ---- analysis + draw loop ---------------------------------------------
+  const loud = { l:-70, hist:[] };
+  function grabFrame(t){
+    if (source==='bars'){ drawBars(t); octx.drawImage(gen,0,0,AW,AH); return true; }
+    if (vid.readyState < 2) return false;
+    try { octx.drawImage(vid,0,0,AW,AH); return true; }
+    catch(e){ return false; }
+  }
+
+  function analyzeVideo(){
+    let img;
+    try { img = octx.getImageData(0,0,AW,AH).data; tainted=false; }
+    catch(e){ if(!tainted){ tainted=true; setStatus('cross-origin source is not CORS-enabled — use Capture Tab or Load File', true); } return null; }
+    const rMin=new Uint8Array(AW).fill(255), rMax=new Uint8Array(AW);
+    const gMin=new Uint8Array(AW).fill(255), gMax=new Uint8Array(AW);
+    const bMin=new Uint8Array(AW).fill(255), bMax=new Uint8Array(AW);
+    const yMin=new Uint8Array(AW).fill(255), yMax=new Uint8Array(AW);
+    const pts=[];
+    for(let y=0;y<AH;y++) for(let x=0;x<AW;x++){
+      const i=(y*AW+x)*4, r=img[i],g=img[i+1],b=img[i+2];
+      if(r<rMin[x])rMin[x]=r; if(r>rMax[x])rMax[x]=r;
+      if(g<gMin[x])gMin[x]=g; if(g>gMax[x])gMax[x]=g;
+      if(b<bMin[x])bMin[x]=b; if(b>bMax[x])bMax[x]=b;
+      const Y=(0.2126*r+0.7152*g+0.0722*b)|0; if(Y<yMin[x])yMin[x]=Y; if(Y>yMax[x])yMax[x]=Y;
+      if(((x+y)&3)===0){ const cb=-0.1146*r-0.3854*g+0.5*b, cr=0.5*r-0.4542*g-0.0458*b; pts.push(cb,cr,r,g,b); }
+    }
+    return {rMin,rMax,gMin,gMax,bMin,bMax,yMin,yMax,pts};
+  }
+
+  function envelope(cv, mins, maxs, color){
+    const c=cv.getContext('2d'), W=cv.width, H=cv.height; c.clearRect(0,0,W,H);
+    c.strokeStyle='#12324a'; for(let i=0;i<=4;i++){ const y=H*i/4; c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke(); }
+    c.globalAlpha=.55; c.fillStyle=color;
+    for(let x=0;x<W;x++){ const sx=(x/W*AW)|0; const lo=H-maxs[sx]/255*H, hi=H-mins[sx]/255*H; c.fillRect(x,lo,1,Math.max(1,hi-lo)); }
+    c.globalAlpha=1;
+  }
+  function parade(cv, d){
+    const c=cv.getContext('2d'), W=cv.width, H=cv.height; c.clearRect(0,0,W,H);
+    const pw=W/3, chans=[[d.rMin,d.rMax,'#ff5a5a'],[d.gMin,d.gMax,'#5aff7a'],[d.bMin,d.bMax,'#5a9dff']];
+    chans.forEach((ch,p)=>{ c.save(); c.beginPath(); c.rect(p*pw,0,pw,H); c.clip();
+      c.strokeStyle='#12324a'; for(let i=0;i<=4;i++){ const y=H*i/4; c.beginPath();c.moveTo(p*pw,y);c.lineTo((p+1)*pw,y);c.stroke(); }
+      c.globalAlpha=.55; c.fillStyle=ch[2];
+      for(let x=0;x<pw;x++){ const sx=(x/pw*AW)|0; const lo=H-ch[1][sx]/255*H, hi=H-ch[0][sx]/255*H; c.fillRect(p*pw+x,lo,1,Math.max(1,hi-lo)); }
+      c.globalAlpha=1; c.restore(); });
+  }
+  function vector(cv, pts){
+    const c=cv.getContext('2d'), W=cv.width, H=cv.height, cx=W/2, cy=H/2, R=Math.min(W,H)/2-6; c.clearRect(0,0,W,H);
+    c.strokeStyle='#12324a'; c.beginPath(); c.arc(cx,cy,R,0,7); c.stroke();
+    c.beginPath(); c.moveTo(cx-R,cy);c.lineTo(cx+R,cy);c.moveTo(cx,cy-R);c.lineTo(cx,cy+R); c.stroke();
+    // skin-tone line (~123°)
+    c.strokeStyle='#3a5a2a'; c.beginPath(); c.moveTo(cx,cy); c.lineTo(cx+R*Math.cos(-2.15),cy+R*Math.sin(-2.15)); c.stroke();
+    const sc=R/140; c.globalAlpha=.65;
+    for(let i=0;i<pts.length;i+=5){ const cb=pts[i],cr=pts[i+1];
+      c.fillStyle=`rgb(${pts[i+2]|0},${pts[i+3]|0},${pts[i+4]|0})`;
+      c.fillRect(cx+cb*sc-1, cy-cr*sc-1, 2, 2); }
+    c.globalAlpha=1;
+  }
+  function scopeAudio(cv){
+    const c=cv.getContext('2d'), W=cv.width, H=cv.height; c.clearRect(0,0,W,H);
+    c.strokeStyle='#12324a'; c.beginPath();c.moveTo(0,H/2);c.lineTo(W,H/2);c.stroke();
+    if(!anTime) return; anTime.getByteTimeDomainData(td);
+    c.strokeStyle='#6FC8F0'; c.beginPath();
+    for(let x=0;x<W;x++){ const v=td[(x/W*td.length)|0]/128-1; const y=H/2 - v*H/2*0.9; x?c.lineTo(x,y):c.moveTo(x,y); }
+    c.stroke();
+  }
+  const peak={l:0,r:0};
+  function rms(an, buf){ if(!an) return -70; an.getFloatTimeDomainData(buf); let s=0; for(let i=0;i<buf.length;i++) s+=buf[i]*buf[i];
+    const r=Math.sqrt(s/buf.length); return 20*Math.log10(r||1e-7); }
+  function meters(cv){
+    const c=cv.getContext('2d'), W=cv.width, H=cv.height; c.clearRect(0,0,W,H);
+    const dbL=rms(anL,freqL), dbR=rms(anR,freqR);
+    const norm=db=>Math.max(0,Math.min(1,(db+60)/60));
+    peak.l=Math.max(norm(dbL),peak.l-0.01); peak.r=Math.max(norm(dbR),peak.r-0.01);
+    [[norm(dbL),peak.l,dbL,'L'],[norm(dbR),peak.r,dbR,'R']].forEach((m,i)=>{
+      const bw=W/2-14, x=i*(W/2)+8;
+      c.fillStyle='#0c1322'; c.fillRect(x,8,bw,H-30);
+      const grd=c.createLinearGradient(0,H-22,0,8); grd.addColorStop(0,'#19c54b');grd.addColorStop(.7,'#e6e23a');grd.addColorStop(1,'#ff3b3b');
+      c.fillStyle=grd; c.fillRect(x,8+(H-30)*(1-m[0]),bw,(H-30)*m[0]);
+      c.fillStyle='#fff'; c.fillRect(x,8+(H-30)*(1-m[1]),bw,2);
+      c.fillStyle='#bcd3ee'; c.font='bold 10px monospace'; c.fillText(m[3]+' '+(isFinite(m[2])?m[2].toFixed(0):'-∞'), x, H-6);
+    });
+  }
+  function loudness(cvHist){
+    const dbL=rms(anL,freqL), dbR=rms(anR,freqR);
+    const mix=10*Math.log10((Math.pow(10,dbL/10)+Math.pow(10,dbR/10))/2 || 1e-9);
+    if(isFinite(mix)) loud.l = loud.l*0.95 + mix*0.05;
+    $('lufs').textContent = isFinite(loud.l)&&loud.l>-70 ? loud.l.toFixed(1) : '-∞';
+    loud.hist.push(loud.l); if(loud.hist.length>240) loud.hist.shift();
+    const c=cvHist.getContext('2d'), W=cvHist.width, H=cvHist.height; c.clearRect(0,0,W,H);
+    c.strokeStyle='#12324a'; const ty=H*(1-(-23+60)/60); c.beginPath();c.moveTo(0,ty);c.lineTo(W,ty);c.stroke();
+    c.strokeStyle='#6FC8F0'; c.beginPath();
+    loud.hist.forEach((v,i)=>{ const x=i/240*W, y=H*(1-Math.max(0,Math.min(1,(v+60)/60))); i?c.lineTo(x,y):c.moveTo(x,y); });
+    c.stroke();
+  }
+
+  let last=0;
+  function frame(t){
+    requestAnimationFrame(frame);
+    if (grabFrame(t)){
+      if (t-last > 33){ last=t;
+        const d = analyzeVideo();
+        if (d){ parade($('cParade'),d); envelope($('cWave'),d.yMin,d.yMax,'#d7f0ff'); vector($('cVec'),d.pts); }
+      }
+    }
+    scopeAudio($('cAud')); meters($('cMeter')); loudness($('cLoud'));
+  }
+  requestAnimationFrame(frame);
+  // resume audio on first user gesture (autoplay policy)
+  addEventListener('click', ()=>{ if(actx&&actx.state==='suspended') actx.resume(); }, {once:false});
+})();
+</script>
+</body>
+</html>

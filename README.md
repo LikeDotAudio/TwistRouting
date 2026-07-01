@@ -274,16 +274,19 @@ Local, no dependencies (uses Python's stdlib server, which provides the autoinde
 python3 start.py        # serves the UI and opens your browser on a free port
 ```
 
-Deploy to a static host over FTPS:
+Build the TypeScript app and deploy it to a static host over FTPS:
 
 ```bash
-python3 uploadftp.py    # regenerates every index.json manifest, then uploads only the git diff
+npm run deploy          # npm run build → upload dist/ + Routes/ → remove legacy js/
+npm run deploy:all      # same, but upload the ENTIRE Routes tree (first cutover / full push)
 ```
 
-`uploadftp.py` walks `Sources/` and `Destinations/` writing fresh `index.json` manifests, then
-uses `git status` to upload **only what changed** (handling renames and deletions), falling back
-to a full upload when there's no diff. FTP credentials come from a local `.env` (`FTP_HOST`,
-`FTP_USER`, `FTP_PASS`). (`deploy.py` is the older full-tree uploader.)
+`deploy.py` builds the app, regenerates every `Routes/**` `index.json` manifest, then uploads the
+built bundle (publishing the entry as `/index.htm`, the site default document), uploads the
+`Routes/` data (**only what changed** per `git status`, or all with `--all`), and removes the
+retired legacy `js/` shell + `sw.js` from the server. FTP credentials come from a local `.env`
+(`FTP_HOST`, `FTP_USER`, `FTP_PASS`). Flags: `--no-build` (deploy existing `dist/`), `--no-clean`
+(leave legacy files on the server).
 
 ### Front-end layout
 

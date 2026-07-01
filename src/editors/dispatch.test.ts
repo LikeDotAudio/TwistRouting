@@ -36,6 +36,7 @@ const EXPECT: Array<[string, string | null]> = [
   ['Key Light', 'lighting'],
   ['WYSIWYG', 'wysiwyg'],
   ['Previz', 'wysiwyg'],
+  ['Meter Input', 'meter-input'], // TEST TOOLS bench: scopes + meters + loudness
   ['Clock', null],                // no dedicated editor → generic matrix fallback
 ];
 
@@ -46,8 +47,8 @@ describe('editor dispatch', () => {
     }
   });
 
-  it('registers all 13 editors', () => {
-    expect(PLUGINS.length).toBe(13);
+  it('registers all 14 editors', () => {
+    expect(PLUGINS.length).toBe(14);
   });
 
   it('orders plugins by ascending precedence (legacy import order)', () => {

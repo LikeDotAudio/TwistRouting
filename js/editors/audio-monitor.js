@@ -6,6 +6,7 @@
 // with volume, MUTE/DIM, stereo downmix and ITU-R BS.1770 loudness (LUFS).
 import { register, addStyles, channelsFor, pushTimer } from './core.js';
 import { renderGridOfSiblings } from './multi.js';
+import { createLoudnessTracker, drawLoudnessPlot } from './shared/loudness.js';
 
 const CSS = `
 .am2{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;height:100%;}
@@ -69,7 +70,7 @@ function buildOne(host, twist) {
         label: c.label, color: c.color || '#39d353',
         level: 0.2, target: 0.35, peak: 0.2, cue: false, mute: false, fmtPair: i,
     }));
-    const ui = { master: 0.75, mute: false, dim: false, downmix: false, lufs: -23, tp: false };
+    const ui = { master: 0.75, mute: false, dim: false, downmix: false, tp: false };
 
     body.innerHTML = `<div class="am2"><div class="am2-bridge"></div><div class="am2-master"></div></div>`;
     const bridge = body.querySelector('.am2-bridge');
@@ -121,7 +122,7 @@ function buildOne(host, twist) {
         </div>
       </div>`;
     const lufsEl = master.querySelector('.am2-lufs .v'), tpEl = master.querySelector('.am2-tp'), tpTxt = master.querySelector('.am2-tp .t');
-    const lhEl = master.querySelector('.am2-lhist'); const lhist = [];
+    const lhEl = master.querySelector('.am2-lhist'); const loudness = createLoudnessTracker({ start: -23 });
     const vol = master.querySelector('.am2-vol input'), volLbl = master.querySelector('.am2-vol b');
     const setVolLbl = () => { const db = ui.master <= 0 ? '-∞' : Math.round((ui.master - 1) * 60); volLbl.textContent = (ui.master <= 0 ? '-∞' : db) + ' dB'; };
     vol.addEventListener('input', () => { ui.master = parseFloat(vol.value); setVolLbl(); }); setVolLbl();
@@ -158,32 +159,12 @@ function buildOne(host, twist) {
             blk.ind.style.left = `calc(${(blk.corr + 1) / 2 * 100}% - 2px)`;
             drawLiss(blk.liss, blk.corr, frame, blk.group[0] ? blk.group[0].level : 0.3);
         });
-        // integrated loudness drifts with program level
-        const target = -28 + (sum / st.length) * 22;
-        ui.lufs += (target - ui.lufs) * 0.05;
-        lufsEl.textContent = ui.lufs.toFixed(1);
+        // integrated loudness drifts with program level (shared BS.1770 tracker)
+        loudness.update(sum / st.length);
+        lufsEl.textContent = loudness.lufs.toFixed(1);
         tpEl.classList.toggle('hot', hot); tpTxt.textContent = hot ? 'TRUE PEAK!' : 'TRUE PEAK OK';
-        lhist.push(ui.lufs); if (lhist.length > 240) lhist.shift();
-        drawLoud(lhEl, lhist);
+        drawLoudnessPlot(lhEl, loudness.history);
     }, 40));
-}
-
-// Loudness-over-time plot, with the −23 LUFS broadcast target line.
-function drawLoud(cv, hist) {
-    const w = cv.width = cv.clientWidth, h = cv.height = cv.clientHeight, ctx = cv.getContext('2d');
-    if (!w || !h) return;
-    ctx.clearRect(0, 0, w, h);
-    const lo = -40, hi = -8, y = (v) => h - ((v - lo) / (hi - lo)) * h;
-    // gridlines + labels
-    ctx.font = '8px Courier New, monospace';
-    [-12, -18, -23, -30].forEach(v => {
-        const yy = y(v); ctx.strokeStyle = v === -23 ? 'rgba(57,211,83,.45)' : 'rgba(80,110,150,.18)';
-        ctx.beginPath(); ctx.moveTo(20, yy); ctx.lineTo(w, yy); ctx.stroke();
-        ctx.fillStyle = v === -23 ? 'rgba(120,235,150,.8)' : 'rgba(120,150,190,.6)'; ctx.fillText(String(v), 1, yy + 3);
-    });
-    ctx.beginPath();
-    hist.forEach((v, i) => { const x = 20 + i / 240 * (w - 20), yy = y(v); i ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy); });
-    ctx.strokeStyle = '#6FC8F0'; ctx.lineWidth = 1.6; ctx.stroke();
 }
 
 function drawLiss(cv, corr, frame, amp) {

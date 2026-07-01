@@ -36,21 +36,21 @@ npm test             # vitest (routing-core unit tests, dispatch tests)
 npm run build        # → dist/  (content-hashed; retires the ?v= ritual)
 ```
 
-## Deploy (side-by-side, no cutover)
+## Deploy (cutover — TypeScript only)
 
 The build has a relative base, so `dist/` drops at the site root next to the
-shared `Routes/`. `deploy-next.py` uploads ONLY the built artifacts so the new
-app is reachable at `/index.next.html` while the live `index.htm` (+ its service
-worker / `js/` shell) stay untouched. Reversible: delete `/index.next.html` +
-`/assets` on the server to undo.
+shared `Routes/`. `deploy.py` (repo root) builds the app, publishes the entry as
+`/index.htm` (the site default document — this is the cutover), uploads the
+hashed bundle to `/assets/`, keeps the `Routes/` data + manifests on the server,
+and removes the retired legacy `js/` shell + `sw.js`.
 
 ```bash
-npm run build
-python3 deploy-next.py     # → /index.next.html + /assets/  (live app untouched)
+npm run deploy            # build → upload dist/ + Routes/ → remove legacy js/
+npm run deploy:all        # same, but upload the ENTIRE Routes tree
 ```
 
-`Routes/**` and the LCARS styling are **shared** with the live app — never
-forked; `Routes/` is kept on the server by the live `uploadftp.py` deploy.
+`Routes/**` is the only JSON that ships — routing DATA, discovered via per-folder
+`index.json` manifests (`src/platform/discovery.ts`), never app code.
 
 ## Status
 

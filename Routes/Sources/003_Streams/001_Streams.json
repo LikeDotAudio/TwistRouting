@@ -1,0 +1,35 @@
+{
+  "id": "streams",
+  "name": "STREAMS",
+  "color": "#C864C8",
+  "streams": [
+    {
+      "id": "stream-1",
+      "name": "STREAM 1",
+      "url": "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+      "left": "L",
+      "right": "R"
+    },
+    {
+      "id": "stream-2",
+      "name": "STREAM 2",
+      "url": "https://www.youtube.com/watch?v=eRsGyueVLvQ",
+      "left": "L",
+      "right": "R"
+    },
+    {
+      "id": "stream-3",
+      "name": "STREAM 3",
+      "url": "https://www.youtube.com/watch?v=R6MlUcmOul8",
+      "left": "L",
+      "right": "R"
+    },
+    {
+      "id": "stream-4",
+      "name": "STREAM 4",
+      "url": "https://www.youtube.com/watch?v=TLkA0RELQ1g",
+      "left": "L",
+      "right": "R"
+    }
+  ]
+}

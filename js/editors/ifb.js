@@ -8,6 +8,7 @@
 // The operator monitors the CONFIDENCE FEED — exactly what the talent hears.
 import { register, addStyles, pushTimer } from './core.js';
 import { renderGridOfSiblings } from './multi.js';
+import { drawAudioWave } from './shared/audio-scope.js';
 
 const CSS = `
 .ifb{display:grid;grid-template-columns:200px minmax(0,1fr) 320px;gap:16px;height:100%;}
@@ -136,7 +137,7 @@ function buildOne(host, twist) {
         $('.ifb-mmv').textContent = dB(progOut); $('.ifb-intv').textContent = dB(intOut);
         status.textContent = s.talk ? `● P${s.talk} ${PRIO[s.talk - 1].nm} TALKING` : '● CLEAR';
         status.classList.toggle('talk', !!s.talk);
-        drawFeed(feed, conf, s.talk);
+        drawAudioWave(feed, conf, { alert: !!s.talk });
         duckHist.push(duckGain); if (duckHist.length > 120) duckHist.shift();
         drawDuck(duck, duckHist);
     }, 40));
@@ -144,17 +145,6 @@ function buildOne(host, twist) {
 
 const dB = (v) => v <= 0.001 ? '-∞ dB' : Math.round((v - 1) * 48) + ' dB';
 
-function drawFeed(cv, level, talk) {
-    const w = cv.width = cv.clientWidth, h = cv.height = cv.clientHeight, ctx = cv.getContext('2d');
-    ctx.clearRect(0, 0, w, h);
-    ctx.strokeStyle = talk ? 'rgba(255,120,120,.9)' : 'rgba(90,224,140,.9)'; ctx.lineWidth = 2; ctx.beginPath();
-    for (let x = 0; x <= w; x += 3) {
-        const t = x / w * Math.PI * 2 * 6;
-        const y = h / 2 + Math.sin(t + performance.now() * 0.004) * level * (h * 0.42) * (0.6 + Math.random() * 0.4);
-        x ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
-    }
-    ctx.stroke();
-}
 function drawDuck(cv, hist) {
     const w = cv.width = cv.clientWidth, h = cv.height = cv.clientHeight, ctx = cv.getContext('2d');
     ctx.clearRect(0, 0, w, h);

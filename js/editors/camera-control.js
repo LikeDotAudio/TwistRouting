@@ -2,7 +2,6 @@
 // Glass" camera console. The feature work lives in ./camera/* modules:
 //   styles.js   – all CSS
 //   state.js    – per-camera shading/robotics state
-//   scopes.js   – RGB parade waveform + vectorscope
 //   bars.js     – precision SMPTE colour bars + bouncing lineage badge
 //   maps.js     – top-down + side robotics maps
 //   controls.js – encoders (incl. RGB-Venn), 5-axis joystick, tally, presets
@@ -10,7 +9,7 @@
 import { register, addStyles, pushTimer } from './core.js';
 import { CSS } from './camera/styles.js';
 import { mkState, clamp } from './camera/state.js';
-import { drawParade, drawVectorscope } from './camera/scopes.js';
+import { drawParade, drawVectorscope } from './shared/video-scopes.js';
 import { drawSMPTE, stepDVD } from './camera/bars.js';
 import { topSVG, sideSVG, updateMaps } from './camera/maps.js';
 import { buildShading, buildJoystick, buildTally, buildPresets, buildFunctions } from './camera/controls.js';

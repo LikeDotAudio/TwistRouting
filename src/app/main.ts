@@ -1,44 +1,31 @@
 // src/app/main.ts — boot + composition root of the A.8 side build.
 //
-// Discovers the SHARED Routes/ data, lists every production's twists, and opens
-// the dispatched editor in the LCARS overlay with a fully-resolved EditorContext
-// (data-in, M3). No DOM scraping, no window globals — everything flows through
-// typed modules: discovery → registry → context → overlay → plugin.render.
+// Builds the LCARS routing console: the SOURCES ingress panel (left), the
+// destination program content (centre), and the destinations tab FOOTER (bottom).
+// Sources drag into destination twists (the crosspoint); clicking a twist opens
+// its dispatched editor with a fully-resolved, typed EditorContext (data-in, M3).
+// Composition root — the only layer allowed to wire ui + editors + platform.
 
-import { listDirectory, fetchJSON } from '../platform/discovery.js';
-import { pluginFor, PLUGINS } from '../editors/registry.js';
-import { isFaultStatus } from '../domain/routing-core/index.js';
+import { pluginFor } from '../editors/registry.js';
 import { openOverlay } from '../platform/overlay.js';
 import { buildContext } from './context.js';
 import type { EditorServices } from '../editors/types.js';
 import type { Production, TwistConfig, Hex } from '../model/index.js';
 import { el } from '../ui/dom.js';
-
-const ROOT = 'Routes/Destinations/';
-
-const twistName = (t: string | TwistConfig): string => (typeof t === 'string' ? t : t.name);
-
-async function loadProductions(): Promise<Production[]> {
-  const groups = await listDirectory(ROOT);
-  const prods: Production[] = [];
-  for (const group of groups.dirs) {
-    const groupUrl = ROOT + group.href;
-    const inner = await listDirectory(groupUrl);
-    // Productions can be one level deep (Edit Suites/Encoders) or two (Control Rooms/Floors).
-    const fileDirs = inner.files.length ? [{ url: groupUrl, files: inner.files }] : [];
-    for (const sub of inner.dirs) {
-      const subUrl = groupUrl + sub.href;
-      fileDirs.push({ url: subUrl, files: (await listDirectory(subUrl)).files });
-    }
-    for (const fd of fileDirs) {
-      for (const f of fd.files) {
-        const p = await fetchJSON<Production>(fd.url + f.href);
-        if (p) prods.push(p);
-      }
-    }
-  }
-  return prods;
-}
+import { renderSourcesPanel } from '../ui/sources/panel.js';
+import { wireSourceNodes } from '../ui/sources/interact.js';
+import { Footer } from '../ui/console/footer.js';
+import { buildDestinations } from '../ui/console/destinations.js';
+import { initDestSelector } from '../ui/console/dest-selector.js';
+import { initClock } from '../ui/console/clock.js';
+import { showSchedule } from '../ui/console/schedule.js';
+import { initAuthPanel, applyScope } from '../ui/console/auth-panel.js';
+import { initRouterView } from '../ui/console/router-view.js';
+import { initCaptainsLog } from '../ui/console/captains-log.js';
+import { initSourceFilter } from '../ui/console/source-filter.js';
+import { initPortals } from '../ui/console/portals.js';
+import { initMission } from '../ui/console/mission.js';
+import { initLcarsPulse } from '../ui/console/lcars-pulse.js';
 
 /** Cross-editor services (M1): replaces the legacy window.openStageBox global. */
 const services: EditorServices = {
@@ -51,72 +38,72 @@ const services: EditorServices = {
   },
 };
 
-/** Open the editor that handles a twist, resolving its context first. */
-function openTwist(prod: Production, twist: string | TwistConfig): void {
-  const name = twistName(twist);
+/** A twist element in the console was clicked → open its dispatched editor. */
+function openEditorForTwist(twistEl: HTMLElement): void {
+  let name = (twistEl.querySelector('.twist-title')?.textContent ?? '').replace(/^[^\p{L}\p{N}]+/u, '').trim();
+  let twist: string | TwistConfig = name;
+  if (twistEl.dataset.config) {
+    try {
+      const c = JSON.parse(twistEl.dataset.config) as TwistConfig;
+      twist = c;
+      if (c.name) name = c.name;
+    } catch { /* keep the title-derived name */ }
+  }
   const plugin = pluginFor(name);
   if (!plugin) return;
-  const color = (prod.color ?? '#646DCC') as Hex;
+  const prodName = twistEl.dataset.prodName ?? '';
+  const color = (twistEl.style.getPropertyValue('--lcars-color').trim() || '#646DCC') as Hex;
+  const prod: Production = { id: twistEl.dataset.prodId ?? 'prod', name: prodName, color };
   openOverlay(
-    { title: `${prod.name} · ${plugin.title}`, color, prodName: prod.name, twistName: name },
+    { title: prodName ? `${prodName} · ${plugin.title}` : plugin.title, color, prodName, twistName: name },
     (body, dispose) => {
-      // Editor-level gating (M6): refuse to render if the role lacks a required cap.
       const ctx = buildContext(prod, twist, dispose, services);
       const blocked = (plugin.requiredCaps ?? []).find((c) => !ctx.can(c));
-      if (blocked) {
-        body.innerHTML = `<div class="ed-h">ACCESS DENIED — requires "${blocked}"</div>`;
-        return;
-      }
+      if (blocked) { body.innerHTML = `<div class="ed-h">ACCESS DENIED — requires "${blocked}"</div>`; return; }
       plugin.render(body, ctx);
+      applyScope(body);   // progressive disclosure: hide [data-cap] the role lacks
     },
   );
 }
 
-function render(prods: Production[]): void {
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = `
-    <header><h1>TwistRouting · <small>A.8 side build</small></h1>
-      <p>${prods.length} productions · ${countDispatched(prods)} twists routed to a dedicated editor
-      · ${PLUGINS.length}/13 editors ported · click a twist to open it</p>
-    </header>`;
-  for (const p of prods) {
-    const section = el('section', { class: 'prod', style: `--c:${p.color ?? '#646DCC'}` });
-    section.append(el('h2', { textContent: p.name + (isFaultStatus(p.status) ? ' ⚠' : '') }));
-    const list = el('ul');
-    for (const t of p.twists ?? []) {
-      const name = twistName(t);
-      const plugin = pluginFor(name);
-      const li = el('li');
-      if (plugin) {
-        const link = el('a', {
-          href: '#',
-          class: 'ed',
-          textContent: `${name} → ${plugin.title}`,
-          style: 'cursor:pointer;text-decoration:none',
-        });
-        link.addEventListener('click', (e) => {
-          e.preventDefault();
-          openTwist(p, t);
-        });
-        li.append(link);
-      } else {
-        li.append(el('span', { textContent: name }), el('span', { class: 'fallback', textContent: ' → matrix fallback' }));
-      }
-      list.append(li);
-    }
-    section.append(list);
-    app.append(section);
-  }
+/** Assemble the console shell and populate sources + destinations concurrently. */
+async function buildConsole(): Promise<void> {
+  document.body.innerHTML = '';
+  const ingress = el('div', { class: 'panel ingress-panel', id: 'sources' });
+  const sash = el('div', { class: 'sidebar-sash', id: 'sidebar-sash', title: 'Drag to resize the sources sidebar' });
+  const content = el('div', { id: 'production-content', style: 'flex:1 1 auto;min-height:0;overflow-y:auto;padding:24px 6px 4px 0;' });
+  const destFrame = el('div', { class: 'panel dest-frame', style: 'overflow:hidden;display:flex;flex-direction:column;border:none;border-radius:0;' }, [content]);
+  const container = el('div', { class: 'container' }, [ingress, sash, destFrame]);
+  // The destinations tab FOOTER runs along the bottom, below the console.
+  const footer = el('footer', { class: 'app-footer' }, [el('div', { id: 'production-tabs', class: 'tabs-header' })]);
+  document.body.append(container, footer);
+  // Footer chrome: the by-line credit link + the radial destination selector (◎).
+  document.body.append(el('a', {
+    class: 'credit-button', href: 'https://like.audio/20260627/twist-like-audio/',
+    target: '_blank', rel: 'noopener', textContent: 'CREATED BY ANTHONY PETER KUZUB  -  WWW.LIKE.AUDIO',
+  }));
+
+  Footer.init(footer.querySelector('#production-tabs') as HTMLElement, content);
+  await Promise.all([
+    renderSourcesPanel(ingress, () => wireSourceNodes(ingress)).then(() => wireSourceNodes(ingress)),
+    buildDestinations(openEditorForTwist),
+  ]);
+  initDestSelector();
+  // Bottom-right UTC clock; the seconds-dots open the production schedule.
+  initClock(showSchedule);
+  // User control: the role badge (top-right) + login/rights overlays. Default Captain.
+  initAuthPanel();
+  // The "1990s VIEW" launcher — the Minesweeper-styled router crosspoint grid.
+  initRouterView();
+  // Remaining LCARS chrome. Order: log button (top of sources) → filter (below it)
+  // → portals pool (kept last) → mission bar + edge pulse (body-level).
+  initCaptainsLog();
+  initSourceFilter();
+  initPortals();
+  initMission();
+  initLcarsPulse();
 }
 
-function countDispatched(prods: Production[]): number {
-  let n = 0;
-  for (const p of prods) for (const t of p.twists ?? []) if (pluginFor(twistName(t))) n++;
-  return n;
-}
-
-loadProductions().then(render).catch((e: unknown) => {
-  const app = document.getElementById('app');
-  if (app) app.innerHTML = `<pre style="color:#ff6a6a">boot failed: ${String(e)}</pre>`;
+buildConsole().catch((e: unknown) => {
+  document.body.innerHTML = `<pre style="color:#ff6a6a">console boot failed: ${String(e)}</pre>`;
 });

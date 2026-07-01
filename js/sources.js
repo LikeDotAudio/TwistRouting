@@ -11,6 +11,7 @@ import { stripOrder, slugId } from './util/dom.js';
 import { styleSignalNode } from './util/color.js';
 import { initializeDraggables } from './dragDrop.js';
 import { renderPlayoutPool } from './poolPlayout.js';
+import { renderStreamsPool } from './poolStreams.js';
 import { renderProductionInputs } from './productions.js';
 import { renderAudioPool } from './poolAudio.js';
 import { renderVideoPool, fillVideoCameras } from './poolVideo.js';
@@ -24,6 +25,7 @@ export function inferPoolKind(data) {
     if (!data || typeof data !== 'object') return 'video';
     if (Array.isArray(data.players)) return 'playout';
     if ((data.outputs && typeof data.outputs === 'object') || Array.isArray(data.boxes)) return 'productions';
+    if (Array.isArray(data.streams)) return 'streams';
     const ec = (data.extraClass || '').toLowerCase();
     if (ec.includes('audio') || Array.isArray(data.items)) return 'audio';
     return 'video';
@@ -32,6 +34,7 @@ export function inferPoolKind(data) {
 export function renderSourceLeaf(data, container, kind, color) {
     if (kind === 'playout') return renderPlayoutPool(data, container);
     if (kind === 'productions') return renderProductionInputs([data], container);
+    if (kind === 'streams') return renderStreamsPool(data, container);
     if (kind === 'audio') return renderAudioPool(data, container, color);
     return renderVideoPool(data, container);
 }
