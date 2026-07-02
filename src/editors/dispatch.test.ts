@@ -15,6 +15,9 @@ const EXPECT: Array<[string, string | null]> = [
   ['Video Mix', 'vision-mixer'],
   ['Switcher', 'vision-mixer'],
   ['Audio Mixer', 'audio-mixer'],
+  ['Monitor Console', 'audio-mixer'],   // renamed per-production audio console
+  ['Audio Positioner', 'audio-positioner'],
+  ['CMDP', 'audio-positioner'],
   ['Intercom', 'intercom'],
   ['Comms', 'intercom'],
   ['CAM 1', 'camera-control'],
@@ -37,6 +40,13 @@ const EXPECT: Array<[string, string | null]> = [
   ['WYSIWYG', 'wysiwyg'],
   ['Previz', 'wysiwyg'],
   ['Meter Input', 'meter-input'], // TEST TOOLS bench: scopes + meters + loudness
+  ['REMOTE 1', 'signal-conditioner'],   // per-production remote → frame-sync/delay/proc-amp
+  ['Conditioner Row', 'signal-conditioner'],
+  ['GRAPHIC EDITOR', 'graphics-engine'],   // graphics engine: full template catalog
+  ['GRAPHICS PRESETS', 'graphics-engine'], // rundown / saved-instance recall
+  ['TITLE EDITOR', 'graphics-engine'],     // name-super / lower-third authoring
+  ['Lower Third', 'graphics-engine'],
+  ['Name Super', 'graphics-engine'],
   ['Clock', null],                // no dedicated editor → generic matrix fallback
 ];
 
@@ -47,8 +57,8 @@ describe('editor dispatch', () => {
     }
   });
 
-  it('registers all 14 editors', () => {
-    expect(PLUGINS.length).toBe(14);
+  it('registers all 17 editors', () => {
+    expect(PLUGINS.length).toBe(17);
   });
 
   it('orders plugins by ascending precedence (legacy import order)', () => {

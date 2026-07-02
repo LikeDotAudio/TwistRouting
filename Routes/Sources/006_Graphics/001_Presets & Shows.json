@@ -1,0 +1,17 @@
+{
+  "id": "gfx-presets",
+  "name": "PRESETS / SHOWS",
+  "color": "#C864C8",
+  "extraClass": "gfx-source",
+  "items": [
+    "MORNING SHOW OPEN",
+    "EVENING NEWS OPEN",
+    "SPORTS OPEN",
+    "BREAKING NEWS",
+    "ELECTION NIGHT",
+    "WEATHER PACKAGE",
+    "LOWER-THIRD KIT",
+    "CREDITS ROLL"
+  ],
+  "status": "OK"
+}

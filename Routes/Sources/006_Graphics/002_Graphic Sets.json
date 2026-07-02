@@ -1,0 +1,17 @@
+{
+  "id": "gfx-sets",
+  "name": "GRAPHIC SETS",
+  "color": "#9C63FF",
+  "extraClass": "gfx-source",
+  "items": [
+    "LOWER THIRD",
+    "NAME SUPER",
+    "UP NEXT",
+    "PARTICIPANT LIST",
+    "BUG / DOG",
+    "TICKER",
+    "FULL-SCREEN TITLE",
+    "SCORE BUG"
+  ],
+  "status": "OK"
+}

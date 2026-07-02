@@ -15,7 +15,9 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    rollupOptions: { input: 'index.next.html' },
+    // Two entry HTMLs: the console (remapped to /index.htm on deploy) and the
+    // standalone MQTT diagnostic tree (kept as /twist-mqtt-tree.html).
+    rollupOptions: { input: { main: 'index.next.html', tree: 'twist-mqtt-tree.html' } },
   },
   test: {
     globals: true,

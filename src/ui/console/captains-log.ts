@@ -10,6 +10,13 @@ interface Removed { node: HTMLElement; parent: Node; next: Node | null }
 interface Entry { id: number; ts: number; twist: HTMLElement; dest: string; prod: string; added: HTMLElement[]; removed: Removed[]; text: string; reversed: boolean }
 interface Narrative { id: number; title: string; entries: Entry[] }
 
+/** A log entry surfaced to external listeners (the MQTT bridge, audit §4.6). */
+export interface LogEntryEvent { voyage: number; entry: number; ts: number; dest: string; prod: string; added: string[]; removed: string[]; text: string; reversed: boolean }
+const logListeners = new Set<(e: LogEntryEvent) => void>();
+/** Subscribe to every Captain's Log entry (and course reversals). Returns an unsubscribe. */
+export function onLogEntry(cb: (e: LogEntryEvent) => void): () => void { logListeners.add(cb); return () => logListeners.delete(cb); }
+function emitLog(e: LogEntryEvent): void { for (const l of logListeners) { try { l(e); } catch { /* a bad listener must not break logging */ } } }
+
 let panel: HTMLElement | null = null, listEl: HTMLElement | null = null, observer: MutationObserver | null = null, paused = false;
 let narratives: Narrative[] = [];
 let current: Narrative | null = null;
@@ -76,7 +83,9 @@ function onMutations(records: MutationRecord[]): void {
   byTwist.forEach((ch, twist) => {
     if (!ch.added.length && !ch.removed.length) return;
     const { dest, prod } = destInfo(twist);
-    nar.entries.push({ id: ++eidSeq, ts, twist, dest, prod, added: ch.added.slice(), removed: ch.removed.slice(), text: narrate(dest, prod, ch.removed.map((r) => r.node), ch.added, ts), reversed: false });
+    const entry: Entry = { id: ++eidSeq, ts, twist, dest, prod, added: ch.added.slice(), removed: ch.removed.slice(), text: narrate(dest, prod, ch.removed.map((r) => r.node), ch.added, ts), reversed: false };
+    nar.entries.push(entry);
+    emitLog({ voyage: nar.id, entry: entry.id, ts, dest, prod, added: ch.added.map(nodeLabel).filter(Boolean), removed: ch.removed.map((r) => nodeLabel(r.node)).filter(Boolean), text: entry.text, reversed: false });
     changed = true;
   });
   if (changed) render();
@@ -95,6 +104,8 @@ function reverseEntry(entry: Entry): void {
   });
   try { updateTwistVisuals(entry.twist); } catch { /* ignore */ }
   entry.reversed = true;
+  const voyage = narratives.find((n) => n.entries.includes(entry))?.id ?? 0;
+  emitLog({ voyage, entry: entry.id, ts: Date.now(), dest: entry.dest, prod: entry.prod, added: entry.added.map(nodeLabel).filter(Boolean), removed: entry.removed.map((r) => nodeLabel(r.node)).filter(Boolean), text: `Course reversed: ${entry.text}`, reversed: true });
 }
 function reverseSelected(): void {
   const all: Entry[] = [];

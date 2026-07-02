@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TWIST MQTT Tree</title>
+<!-- Standalone diagnostic (audit §appendix — the twist equivalent of comMQTT's
+     MqttConnectionTester.html). Subscribes to Twist/# and shows the live retained
+     topic tree the TwistBus advertises. Open with ?mqtt=<host[:port]> — the SAME
+     convention the console uses. No build step; drop it next to index.htm. -->
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #0a0805; color: #ffcf6b; font: 13px/1.4 'Courier New', monospace; }
+  header { display: flex; align-items: center; gap: 14px; padding: 10px 16px; background: #C2B74B; color: #1a1206; font-weight: 900; letter-spacing: 2px; }
+  header input { font: inherit; padding: 4px 8px; border: none; border-radius: 4px; width: 220px; }
+  header .dot { width: 12px; height: 12px; border-radius: 50%; background: #cc3a3a; box-shadow: 0 0 8px #cc3a3a; }
+  header .dot.on { background: #6cdf4a; box-shadow: 0 0 8px #6cdf4a; }
+  header .sp { flex: 1; }
+  header small { font-weight: 400; letter-spacing: 0; opacity: .8; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 5px 16px; border-bottom: 1px solid #1c1810; vertical-align: top; }
+  th { position: sticky; top: 0; background: #140f06; color: #C2B74B; letter-spacing: 1px; }
+  td.topic { color: #6FC8F0; white-space: nowrap; }
+  td.val { color: #ffe9b0; white-space: pre-wrap; word-break: break-word; }
+  td.age { color: #8a7430; text-align: right; white-space: nowrap; }
+  .empty { padding: 40px; text-align: center; color: #6a5a30; letter-spacing: 1px; }
+  .count { color: #1a1206; background: #1a1206; }
+  header .count { background: #1a1206; color: #C2B74B; padding: 2px 8px; border-radius: 8px; }
+</style>
+</head>
+<body>
+<header>
+  <span class="dot" id="dot"></span>
+  <span>TWIST MQTT TREE</span>
+  <input id="host" placeholder="host[:port]" />
+  <button id="go">CONNECT</button>
+  <span class="sp"></span>
+  <span class="count" id="count">0</span>
+  <small id="url"></small>
+</header>
+<table>
+  <thead><tr><th style="width:44%">TOPIC (Twist/…)</th><th>PAYLOAD</th><th style="width:70px">AGE</th></tr></thead>
+  <tbody id="rows"><tr><td colspan="3" class="empty">— not connected —</td></tr></tbody>
+</table>
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+<script>
+  const ROOT = 'Twist';
+  const q = new URLSearchParams(location.search);
+  const store = new Map();      // topic -> { payload, ts }
+  let client = null;
+
+  const dot = document.getElementById('dot');
+  const rows = document.getElementById('rows');
+  const count = document.getElementById('count');
+  const urlEl = document.getElementById('url');
+  const hostInput = document.getElementById('host');
+  hostInput.value = q.get('mqtt') || localStorage.getItem('twistMqtt') || '';
+
+  function resolveUrl(raw) {
+    raw = (raw || '').trim();
+    if (!raw) return null;
+    if (/^wss?:\/\//i.test(raw)) return raw;
+    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    return raw.includes(':') ? `${proto}://${raw}` : `${proto}://${raw}:9001`;
+  }
+
+  function render() {
+    count.textContent = store.size;
+    if (!store.size) { rows.innerHTML = '<tr><td colspan="3" class="empty">— no retained topics yet —</td></tr>'; return; }
+    const now = Date.now();
+    const keys = [...store.keys()].sort();
+    rows.innerHTML = keys.map((k) => {
+      const { payload, ts } = store.get(k);
+      const rel = k.startsWith(ROOT + '/') ? k.slice(ROOT.length + 1) : k;
+      const age = Math.max(0, Math.round((now - ts) / 1000));
+      return `<tr><td class="topic">${rel}</td><td class="val">${escapeHtml(payload)}</td><td class="age">${age}s</td></tr>`;
+    }).join('');
+  }
+  function escapeHtml(s) { return String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
+
+  function connect() {
+    const url = resolveUrl(hostInput.value);
+    if (!url) { alert('Enter a broker host, e.g. 44.44.44.152'); return; }
+    localStorage.setItem('twistMqtt', hostInput.value.trim());
+    urlEl.textContent = url;
+    if (client) { try { client.end(true); } catch (e) {} }
+    store.clear(); render();
+    client = mqtt.connect(url, { username: 'guest', password: 'guest', keepalive: 60, reconnectPeriod: 5000 });
+    client.on('connect', () => { dot.classList.add('on'); client.subscribe(ROOT + '/#'); });
+    client.on('reconnect', () => dot.classList.remove('on'));
+    client.on('close', () => dot.classList.remove('on'));
+    client.on('offline', () => dot.classList.remove('on'));
+    client.on('message', (topic, payload) => {
+      let txt = new TextDecoder().decode(payload);
+      try { txt = JSON.stringify(JSON.parse(txt)); } catch (e) {}
+      if (!txt) store.delete(topic); else store.set(topic, { payload: txt, ts: Date.now() });
+      render();
+    });
+  }
+
+  document.getElementById('go').addEventListener('click', connect);
+  hostInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') connect(); });
+  setInterval(render, 1000);   // refresh the age column
+  if (hostInput.value) connect();
+</script>
+</body>
+</html>

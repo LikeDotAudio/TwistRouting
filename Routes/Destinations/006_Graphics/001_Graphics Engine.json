@@ -1,0 +1,44 @@
+{
+  "id": "gfx-engine",
+  "name": "GRAPHICS ENGINE",
+  "color": "#C864C8",
+  "twists": [
+    {
+      "name": "GRAPHICS PRESETS",
+      "accepts": "both",
+      "inputs": [
+        "MORNING SHOW OPEN",
+        "EVENING NEWS OPEN",
+        "SPORTS OPEN",
+        "BREAKING NEWS",
+        "ELECTION NIGHT",
+        "WEATHER PACKAGE",
+        "LOWER-THIRD KIT",
+        "CREDITS ROLL"
+      ]
+    },
+    {
+      "name": "TITLE EDITOR",
+      "accepts": "both",
+      "inputs": [
+        "LOWER THIRD",
+        "NAME SUPER",
+        "BYLINE / LOCATOR"
+      ]
+    },
+    {
+      "name": "GRAPHIC EDITOR",
+      "accepts": "both",
+      "inputs": [
+        "LOWER THIRD",
+        "NAME SUPER",
+        "UP NEXT",
+        "PARTICIPANT LIST",
+        "BUG / DOG",
+        "TICKER",
+        "FULL-SCREEN TITLE",
+        "SCORE BUG"
+      ]
+    }
+  ]
+}

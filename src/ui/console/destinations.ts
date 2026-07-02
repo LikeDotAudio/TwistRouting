@@ -33,6 +33,7 @@ export function renderPrograms(pgm: Production, pane: HTMLElement, openEditor?: 
       cfgAttr = `data-config='${JSON.stringify(t).replace(/'/g, '&#39;')}'`;
       if (t.accepts && acceptColor[t.accepts]) lcars = acceptColor[t.accepts] as string;
       rowKey = t.row || (t.monitor ? 'monitors' : null);
+      if (rowKey === 'remotes') lcars = '#64C8A0';   // signal-conditioner green, distinct from camera blue
     }
     const isSmall = !!rowKey;
     const sizing = isSmall ? 'flex: 1 1 0; min-width: 0;' : 'flex: 0 0 auto; min-width: 200px;';
@@ -55,8 +56,9 @@ export function renderPrograms(pgm: Production, pane: HTMLElement, openEditor?: 
       <div class="program-title" style="background: ${pColor};">${monoEmoji(titleText)}${titleText}${faulted ? ' ' : ''}${faultTag(pgm.status)}</div>
       <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding-right: 60px;">`;
   if (rows['cameras']) html += `<div class="monitor-row camera-row">${rows['cameras']}</div>`;
+  if (rows['remotes']) html += `<div class="monitor-row remote-row">${rows['remotes']}</div>`;   // conditioned remotes, directly under the cameras
   html += bigHtml;
-  rowOrder.forEach((k) => { if (k !== 'cameras') html += `<div class="monitor-row">${rows[k]}</div>`; });
+  rowOrder.forEach((k) => { if (k !== 'cameras' && k !== 'remotes') html += `<div class="monitor-row">${rows[k]}</div>`; });
   html += `</div></div>`;
   pane.innerHTML = html;
   initializeTwists(pane, openEditor);

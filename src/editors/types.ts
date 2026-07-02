@@ -9,6 +9,7 @@
 import type { Capability, Hex, TwistConfig } from '../model/index.js';
 import type { Feed } from '../domain/routing-core/index.js';
 import type { Disposer } from '../ui/timers.js';
+import type { ParamSpec } from '../platform/mqtt/types.js';
 
 /** A sibling twist of the same kind in this production (used by grid editors). */
 export interface Sibling {
@@ -36,6 +37,15 @@ export interface EditorContext {
 
 export interface EditorServices {
   openStageBox(name: string, color: Hex, channels: string[]): void;
+  // MQTT param bridge (audit §4.5). Optional: the host binds these to THIS twist's
+  // topic when a bus exists; absent when MQTT is disabled, so editors call them
+  // with `?.`. An editor never learns the topic — it names params, the host scopes.
+  /** One-time: advertise the parameter schema this editor exposes for the twist. */
+  advertiseParams?(params: ParamSpec[]): void;
+  /** Publish a live parameter value (throttled by default — safe for drag/meter loops). */
+  publishParam?(name: string, value: unknown, opts?: { throttle?: boolean }): void;
+  /** Subscribe to a parameter (backend echoes / other consoles). Returns an unsubscribe. */
+  onParam?(name: string, cb: (value: unknown) => void): () => void;
 }
 
 export type EditorRender = (host: HTMLElement, ctx: EditorContext) => void;

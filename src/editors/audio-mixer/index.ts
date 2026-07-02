@@ -11,9 +11,9 @@ import { renderConsole } from './view.js';
 
 const plugin: EditorPlugin = {
   id: 'audio-mixer',
-  title: 'AUDIO MIXER · CONSOLE',
+  title: 'MONITOR CONSOLE · AUDIO',
   order: 4,
-  match: (n) => /audio\s*mix/i.test(n),
+  match: (n) => /audio\s*mix|monitor\s*console/i.test(n),
   requiredCaps: ['audio'],
   render(host, ctx) {
     injectAudioMixerStyles();

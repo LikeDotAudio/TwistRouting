@@ -60,6 +60,62 @@
       "cameraInput": true
     },
     {
+      "name": "REMOTE 1",
+      "accepts": "camera",
+      "maxVideo": 1,
+      "row": "remotes",
+      "cameraInput": true
+    },
+    {
+      "name": "REMOTE 2",
+      "accepts": "camera",
+      "maxVideo": 1,
+      "row": "remotes",
+      "cameraInput": true
+    },
+    {
+      "name": "REMOTE 3",
+      "accepts": "camera",
+      "maxVideo": 1,
+      "row": "remotes",
+      "cameraInput": true
+    },
+    {
+      "name": "REMOTE 4",
+      "accepts": "camera",
+      "maxVideo": 1,
+      "row": "remotes",
+      "cameraInput": true
+    },
+    {
+      "name": "REMOTE 5",
+      "accepts": "camera",
+      "maxVideo": 1,
+      "row": "remotes",
+      "cameraInput": true
+    },
+    {
+      "name": "REMOTE 6",
+      "accepts": "camera",
+      "maxVideo": 1,
+      "row": "remotes",
+      "cameraInput": true
+    },
+    {
+      "name": "REMOTE 7",
+      "accepts": "camera",
+      "maxVideo": 1,
+      "row": "remotes",
+      "cameraInput": true
+    },
+    {
+      "name": "REMOTE 8",
+      "accepts": "camera",
+      "maxVideo": 1,
+      "row": "remotes",
+      "cameraInput": true
+    },
+    {
       "name": "Video Mixer",
       "accepts": "video",
       "inputs": [
@@ -86,7 +142,25 @@
       ]
     },
     {
-      "name": "Audio Mixer",
+      "name": "MONITOR CONSOLE",
+      "accepts": "audio",
+      "inputs": [
+        "CH 1",
+        "CH 2",
+        "CH 3",
+        "CH 4",
+        "CH 5",
+        "CH 6",
+        "CH 7",
+        "CH 8",
+        "CH 9",
+        "CH 10",
+        "CH 11",
+        "CH 12"
+      ]
+    },
+    {
+      "name": "AUDIO POSITIONER",
       "accepts": "audio",
       "inputs": [
         "CH 1",
